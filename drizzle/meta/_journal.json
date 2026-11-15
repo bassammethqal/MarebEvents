@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794654779115,
+      "tag": "0000_flimsy_tyger_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794655684538,
+      "tag": "0001_first_senator_kelly",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794659840993,
+      "tag": "0002_chubby_tombstone",
+      "breakpoints": true
+    }
+  ]
+}
