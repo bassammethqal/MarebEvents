@@ -1,63 +1,75 @@
-MarebEvents
+<div align="center">MarebEvents
 
-Event Booking & Venue Rental Platform
+Discover. Book. Celebrate.
 
-MarebEvents is a web platform project focused on simplifying the discovery and rental of event venues, including wedding halls, resorts, and rest houses.
+A digital platform for discovering and booking event venues in Ma'rib, Yemen.
 
-The project aims to provide a convenient experience for customers looking for suitable venues and venue owners managing their listings.
+Simplifying the way people find and rent event spaces.
 
----
+<br/>"NEXT.JS" "TYPESCRIPT" "REACT" "TAILWIND CSS" "SQLITE" "DRIZZLE ORM"
 
-Project Overview
+<br/>🚧 UNDER DEVELOPMENT
 
-MarebEvents is being developed to serve the event venue rental market, starting with Ma'rib, Yemen.
+</div>---
 
-The platform focuses on connecting customers with venue owners through an organized digital booking experience.
+✦ About the Project
 
-Technology Stack
+MarebEvents is a web-based platform designed to connect customers with event venue owners through a simple and organized booking experience.
 
-- Framework: Next.js 16
-- Language: TypeScript
-- UI Library: React 19
-- Styling: Tailwind CSS 4
-- Database: SQLite
-- ORM: Drizzle ORM
-- SQLite Driver: better-sqlite3
+Starting in Ma'rib, Yemen, the platform focuses on making it easier to discover and rent suitable spaces for different occasions.
 
-Project Status
+✦ What is MarebEvents?
 
-🚧 Under Development
+The platform focuses on three venue categories:
 
-Features and functionality are being developed and refined.
+Category| Description
+Wedding Halls| Venues for wedding celebrations and special occasions
+Resorts| Spaces for gatherings and recreational activities
+Rest Houses| Private spaces for relaxation and events
 
-Getting Started
+✦ Technology Stack
+
+Technology| Purpose
+Next.js 16| Application framework
+TypeScript| Programming language
+React 19| User interface
+Tailwind CSS 4| Styling
+SQLite| Database
+Drizzle ORM| Database operations
+better-sqlite3| SQLite driver
+
+✦ Project Status
+
+MarebEvents is currently under active development.
+
+The project is evolving as its features, interface, and database structure are developed.
+
+✦ Getting Started
 
 Clone the repository:
 
 git clone https://github.com/bassammethqal/MarebEvents.git
 
-Navigate to the project directory:
-
-cd MarebEvents
-
 Install dependencies:
 
 npm install
 
-Start the development server:
+Run the development server:
 
 npm run dev
 
-Open "http://localhost:3000" (http://localhost:3000) in your browser.
+Then open "http://localhost:3000" in your browser.
 
-Developer
+✦ Developer
 
 Bassam Methqal
 
-CIS Student & Developer
+Computer Information Systems Student · Developer
 
 "GitHub Profile" (https://github.com/bassammethqal)
 
 ---
 
-Building practical digital solutions through technology and continuous learning.
+<div align="center">MarebEvents — Making venue booking simpler.
+
+</div>
