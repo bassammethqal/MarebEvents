@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+MarebEvents
 
-## Getting Started
+Event Booking & Venue Rental Platform
 
-First, run the development server:
+MarebEvents is a web platform project focused on simplifying the discovery and rental of event venues, including wedding halls, resorts, and rest houses.
 
-```bash
+The project aims to provide a convenient experience for customers looking for suitable venues and venue owners managing their listings.
+
+---
+
+Project Overview
+
+MarebEvents is being developed to serve the event venue rental market, starting with Ma'rib, Yemen.
+
+The platform focuses on connecting customers with venue owners through an organized digital booking experience.
+
+Technology Stack
+
+- Framework: Next.js 16
+- Language: TypeScript
+- UI Library: React 19
+- Styling: Tailwind CSS 4
+- Database: SQLite
+- ORM: Drizzle ORM
+- SQLite Driver: better-sqlite3
+
+Project Status
+
+🚧 Under Development
+
+Features and functionality are being developed and refined.
+
+Getting Started
+
+Clone the repository:
+
+git clone https://github.com/bassammethqal/MarebEvents.git
+
+Navigate to the project directory:
+
+cd MarebEvents
+
+Install dependencies:
+
+npm install
+
+Start the development server:
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open "http://localhost:3000" (http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Developer
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Bassam Methqal
 
-## Learn More
+CIS Student & Developer
 
-To learn more about Next.js, take a look at the following resources:
+"GitHub Profile" (https://github.com/bassammethqal)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Building practical digital solutions through technology and continuous learning.
