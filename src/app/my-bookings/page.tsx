@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
-import { sqlite } from "@/db";
+import { client } from "@/db";
 import { ArrowLeft, Building2 } from "lucide-react";
 import { Bookings3D, Pin3D } from "@/components/ui/Icons3D";
 
@@ -21,9 +21,9 @@ interface BookingRecord {
   currency: string;
 }
 
-function getCustomerBookings(userId: string): BookingRecord[] {
+async function getCustomerBookings(userId: string): Promise<BookingRecord[]> {
   try {
-    const query = `
+    const rows = await client<BookingRecord[]>`
       SELECT 
         b.id,
         b.booking_reference,
@@ -38,10 +38,10 @@ function getCustomerBookings(userId: string): BookingRecord[] {
         b.currency
       FROM bookings b
       JOIN venues v ON v.id = b.venue_id
-      WHERE b.customer_id = ?
+      WHERE b.customer_id = ${userId}
       ORDER BY b.created_at DESC
     `;
-    return sqlite.prepare(query).all(userId) as BookingRecord[];
+    return rows;
   } catch (error) {
     console.error("Failed to load customer bookings:", error);
     return [];
@@ -105,7 +105,7 @@ async function BookingsContent() {
     );
   }
 
-  const bookings = getCustomerBookings(user.id);
+  const bookings = await getCustomerBookings(user.id);
 
   if (bookings.length === 0) {
     return (

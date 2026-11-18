@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
-import { sqlite } from "@/db";
+import { client } from "@/db";
 import {
   MapPin,
   Users,
@@ -34,7 +34,7 @@ interface VenueData {
 interface ImageRow {
   id: string;
   image_url: string;
-  is_cover: number;
+  is_cover: boolean;
 }
 
 interface UnitRow {
@@ -55,52 +55,48 @@ interface AmenityRow {
   name_ar: string;
 }
 
-function getVenueBySlug(slug: string) {
+async function getVenueBySlug(slug: string) {
   try {
-    const venue = sqlite
-      .prepare(
-        `SELECT 
-          v.id,
-          v.name,
-          v.slug,
-          v.description,
-          v.city,
-          v.district,
-          v.address_details,
-          v.contact_phone,
-          v.contact_whatsapp,
-          v.default_currency,
-          c.name_ar as category_name,
-          (SELECT MAX(capacity_max) FROM venue_units WHERE venue_id = v.id) as max_capacity
-        FROM venues v
-        LEFT JOIN venue_categories c ON c.id = v.category_id
-        WHERE v.slug = ? AND v.status = 'active'
-        LIMIT 1`
-      )
-      .get(slug) as VenueData | undefined;
+    const [venue] = await client<VenueData[]>`
+      SELECT 
+        v.id,
+        v.name,
+        v.slug,
+        v.description,
+        v.city,
+        v.district,
+        v.address_details,
+        v.contact_phone,
+        v.contact_whatsapp,
+        v.default_currency,
+        c.name_ar as category_name,
+        (SELECT MAX(capacity_max) FROM venue_units WHERE venue_id = v.id) as max_capacity
+      FROM venues v
+      LEFT JOIN venue_categories c ON c.id = v.category_id
+      WHERE v.slug = ${slug} AND v.status = 'active'
+      LIMIT 1
+    `;
 
     if (!venue) return null;
 
-    const images = sqlite
-      .prepare(`SELECT id, image_url, is_cover FROM venue_images WHERE venue_id = ? ORDER BY is_cover DESC`)
-      .all(venue.id) as ImageRow[];
+    const images = await client<ImageRow[]>`
+      SELECT id, image_url, is_cover FROM venue_images WHERE venue_id = ${venue.id} ORDER BY is_cover DESC
+    `;
 
-    const units = sqlite
-      .prepare(`SELECT id, name, unit_type, capacity_max FROM venue_units WHERE venue_id = ? AND is_active = 1`)
-      .all(venue.id) as UnitRow[];
+    const units = await client<UnitRow[]>`
+      SELECT id, name, unit_type, capacity_max FROM venue_units WHERE venue_id = ${venue.id} AND is_active = true
+    `;
 
-    const pricing = sqlite
-      .prepare(`SELECT shift, price, currency FROM pricing_tiers WHERE venue_id = ?`)
-      .all(venue.id) as PricingRow[];
+    const pricing = await client<PricingRow[]>`
+      SELECT shift, price, currency FROM pricing_tiers WHERE venue_id = ${venue.id}
+    `;
 
-    const amenities = sqlite
-      .prepare(
-        `SELECT a.id, a.name_ar 
-         FROM venue_amenities va
-         JOIN amenities a ON a.id = va.amenity_id
-         WHERE va.venue_id = ?`
-      )
-      .all(venue.id) as AmenityRow[];
+    const amenities = await client<AmenityRow[]>`
+      SELECT a.id, a.name_ar 
+      FROM venue_amenities va
+      JOIN amenities a ON a.id = va.amenity_id
+      WHERE va.venue_id = ${venue.id}
+    `;
 
     return {
       venue,
@@ -121,7 +117,7 @@ export default async function VenueDetailsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const data = getVenueBySlug(slug);
+  const data = await getVenueBySlug(slug);
 
   if (!data) {
     notFound();
@@ -134,9 +130,9 @@ export default async function VenueDetailsPage({
   // Check if venue is favorited by current user
   let isFavorited = false;
   if (session?.user) {
-    const fav = sqlite
-      .prepare(`SELECT id FROM favorites WHERE user_id = ? AND venue_id = ?`)
-      .get(session.user.id, venue.id);
+    const [fav] = await client`
+      SELECT id FROM favorites WHERE user_id = ${session.user.id} AND venue_id = ${venue.id} LIMIT 1
+    `;
     isFavorited = !!fav;
   }
 

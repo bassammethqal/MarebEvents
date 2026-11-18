@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
-import { sqlite } from "@/db";
+import { client } from "@/db";
 import { ArrowLeft } from "lucide-react";
 import { FavoriteButton } from "@/components/ui/FavoriteButton";
 import { Heart3D, Pin3D } from "@/components/ui/Icons3D";
@@ -19,9 +19,9 @@ interface FavoritedVenue {
   default_currency: string;
 }
 
-function getUserFavorites(userId: string): FavoritedVenue[] {
+async function getUserFavorites(userId: string): Promise<FavoritedVenue[]> {
   try {
-    const query = `
+    const rows = await client<FavoritedVenue[]>`
       SELECT 
         v.id,
         v.name,
@@ -30,15 +30,15 @@ function getUserFavorites(userId: string): FavoritedVenue[] {
         v.district,
         v.default_currency,
         c.name_ar as category_name,
-        (SELECT image_url FROM venue_images WHERE venue_id = v.id AND is_cover = 1 LIMIT 1) as cover_image,
+        (SELECT image_url FROM venue_images WHERE venue_id = v.id AND is_cover = true LIMIT 1) as cover_image,
         (SELECT MIN(price) FROM pricing_tiers WHERE venue_id = v.id AND shift = 'evening') as starting_price
       FROM favorites f
       JOIN venues v ON v.id = f.venue_id
       LEFT JOIN venue_categories c ON c.id = v.category_id
-      WHERE f.user_id = ?
+      WHERE f.user_id = ${userId}
       ORDER BY f.created_at DESC
     `;
-    return sqlite.prepare(query).all(userId) as FavoritedVenue[];
+    return rows;
   } catch (error) {
     console.error("Failed to load user favorites:", error);
     return [];
@@ -82,7 +82,7 @@ export default async function FavoritesPage() {
     );
   }
 
-  const favorites = getUserFavorites(user.id);
+  const favorites = await getUserFavorites(user.id);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-4 py-6">

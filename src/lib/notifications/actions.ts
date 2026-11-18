@@ -1,7 +1,8 @@
 "use server";
 
 import { getCurrentSession } from "@/lib/auth/session";
-import { sqlite } from "@/db";
+import { db, schema } from "@/db";
+import { eq, desc, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export interface UserNotification {
@@ -31,23 +32,30 @@ export async function getUserNotificationsAction(): Promise<{
       };
     }
 
-    const rows = sqlite
-      .prepare(
-        `SELECT id, title, message, type, is_read, action_url, created_at 
-         FROM notifications 
-         WHERE user_id = ? 
-         ORDER BY created_at DESC 
-         LIMIT 20`
-      )
-      .all(session.user.id) as UserNotification[];
+    const rows = await db
+      .select()
+      .from(schema.notifications)
+      .where(eq(schema.notifications.userId, session.user.id))
+      .orderBy(desc(schema.notifications.createdAt))
+      .limit(20);
 
-    const unreadCount = rows.filter((n) => !n.is_read).length;
+    const formattedRows: UserNotification[] = rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      message: r.message,
+      type: r.type,
+      is_read: r.isRead ? 1 : 0,
+      action_url: r.actionUrl,
+      created_at: r.createdAt,
+    }));
+
+    const unreadCount = formattedRows.filter((n) => !n.is_read).length;
 
     return {
       success: true,
       authenticated: true,
       unreadCount,
-      notifications: rows,
+      notifications: formattedRows,
     };
   } catch (error) {
     console.error("Failed to fetch notifications:", error);
@@ -65,11 +73,15 @@ export async function markNotificationReadAction(notificationId: string) {
     const session = await getCurrentSession();
     if (!session?.user) return { success: false, error: "غير مصرح" };
 
-    sqlite
-      .prepare(
-        `UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?`
-      )
-      .run(notificationId, session.user.id);
+    await db
+      .update(schema.notifications)
+      .set({ isRead: true })
+      .where(
+        and(
+          eq(schema.notifications.id, notificationId),
+          eq(schema.notifications.userId, session.user.id)
+        )
+      );
 
     revalidatePath("/");
     return { success: true };
@@ -84,11 +96,10 @@ export async function markAllNotificationsReadAction() {
     const session = await getCurrentSession();
     if (!session?.user) return { success: false, error: "غير مصرح" };
 
-    sqlite
-      .prepare(
-        `UPDATE notifications SET is_read = 1 WHERE user_id = ?`
-      )
-      .run(session.user.id);
+    await db
+      .update(schema.notifications)
+      .set({ isRead: true })
+      .where(eq(schema.notifications.userId, session.user.id));
 
     revalidatePath("/");
     return { success: true };

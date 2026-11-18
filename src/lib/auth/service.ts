@@ -4,21 +4,21 @@ import crypto from "crypto";
 import { hashPassword, verifyPassword } from "./password";
 import {
   createSession,
-  rotateSession,
-  invalidateSession,
+  SafeUser,
   sanitizeUser,
+  rotateSession,
   setSessionCookie,
   removeSessionCookie,
-  type SafeUser,
+  invalidateSession,
 } from "./session";
 import { checkRateLimit, recordFailedAttempt, resetRateLimit } from "./rate-limit";
 
 export interface RegisterInput {
+  email?: string;
+  phone?: string;
   fullName: string;
-  email?: string | null;
-  phone?: string | null;
   password: string;
-  role?: "customer" | "owner"; // Admin ممنوع منعاً باتاً من التسجيل العام
+  role?: "customer" | "owner";
 }
 
 export interface LoginInput {
@@ -31,41 +31,41 @@ export interface LoginInput {
 /**
  * تنظيف وتوحيد صيغة البريد الإلكتروني
  */
-export function normalizeEmail(email?: string | null): string | null {
+export function normalizeEmail(email?: string): string | null {
   if (!email) return null;
   const trimmed = email.trim().toLowerCase();
   return trimmed.length > 0 ? trimmed : null;
 }
 
 /**
- * تنظيف وتوحيد صيغة رقم الهاتف (أرقام فقط وإزالة الفراغات والرموز)
+ * تنظيف وتوحيد صيغة رقم الهاتف
  */
-export function normalizePhone(phone?: string | null): string | null {
+export function normalizePhone(phone?: string): string | null {
   if (!phone) return null;
-  const digits = phone.replace(/[^\d+]/g, "").trim();
-  return digits.length > 0 ? digits : null;
+  const trimmed = phone.trim().replace(/\s+/g, "");
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 /**
- * تسجيل حساب جديد
+ * تسجيل حساب مستخدم جديد
  */
 export async function registerUser(
   input: RegisterInput
 ): Promise<{ user: SafeUser; session: schema.Session; signedCookieValue: string }> {
-  const fullName = input.fullName?.trim();
-  if (!fullName || fullName.length < 2) {
-    throw new Error("الاسم الكامل مطلوب ويجب ألا يقل عن حرفين.");
-  }
-
   const email = normalizeEmail(input.email);
   const phone = normalizePhone(input.phone);
+  const fullName = input.fullName?.trim();
 
-  if (!email && !phone) {
-    throw new Error("يجب تقديم البريد الإلكتروني أو رقم الهاتف على الأقل.");
+  if (!fullName) {
+    throw new Error("يرجى إدخال الاسم الكامل.");
   }
 
-  if (input.password.length < 8) {
-    throw new Error("يجب ألا تقل كلمة المرور عن 8 خانات.");
+  if (!email && !phone) {
+    throw new Error("يجب تقديم البريد الإلكتروني أو رقم الهاتف على الأقل للتسجيل.");
+  }
+
+  if (!input.password || input.password.length < 8) {
+    throw new Error("كلمة المرور يجب أن تتكون من 8 خانات على الأقل.");
   }
 
   // منع محاولة التسجيل بدور مدير نظام (Admin) من الواجهة العامة
@@ -74,11 +74,10 @@ export async function registerUser(
 
   // 1. التحقق من عدم تكرار البريد الإلكتروني
   if (email) {
-    const existingEmail = db
+    const [existingEmail] = await db
       .select({ id: schema.users.id })
       .from(schema.users)
-      .where(eq(schema.users.email, email))
-      .get();
+      .where(eq(schema.users.email, email));
 
     if (existingEmail) {
       throw new Error("البريد الإلكتروني مسجل مسبقاً في المنصة.");
@@ -87,11 +86,10 @@ export async function registerUser(
 
   // 2. التحقق من عدم تكرار رقم الهاتف
   if (phone) {
-    const existingPhone = db
+    const [existingPhone] = await db
       .select({ id: schema.users.id })
       .from(schema.users)
-      .where(eq(schema.users.phone, phone))
-      .get();
+      .where(eq(schema.users.phone, phone));
 
     if (existingPhone) {
       throw new Error("رقم الهاتف مسجل مسبقاً في المنصة.");
@@ -119,9 +117,7 @@ export async function registerUser(
   };
 
   // 4. كتابة المستخدم وإنشاء الجلسة بحفظ الهاش المشفر فقط
-  db.transaction((tx) => {
-    tx.insert(schema.users).values(newUser).run();
-  });
+  await db.insert(schema.users).values(newUser);
 
   const { session, signedCookieValue } = await createSession(userId);
 
@@ -132,11 +128,10 @@ export async function registerUser(
     // تخطي في بيئات الاختبار بدون سياق Cookies
   }
 
-  const user = db
+  const [user] = await db
     .select()
     .from(schema.users)
-    .where(eq(schema.users.id, userId))
-    .get();
+    .where(eq(schema.users.id, userId));
 
   return {
     user: sanitizeUser(user!),
@@ -185,7 +180,7 @@ export async function loginUser(
   const normalizedEmail = normalizeEmail(rawIdentifier);
   const normalizedPhone = normalizePhone(rawIdentifier);
 
-  const user = db
+  const [user] = await db
     .select()
     .from(schema.users)
     .where(
@@ -193,8 +188,7 @@ export async function loginUser(
         normalizedEmail ? eq(schema.users.email, normalizedEmail) : undefined,
         normalizedPhone ? eq(schema.users.phone, normalizedPhone) : undefined
       )
-    )
-    .get();
+    );
 
   if (!user || !user.passwordHash) {
     await recordFailedAttempt(identRateKey, 5, 15 * 60);
@@ -229,14 +223,13 @@ export async function loginUser(
       ? new Date(Date.now() + 15 * 60 * 1000).toISOString()
       : null;
 
-    db.update(schema.users)
+    await db.update(schema.users)
       .set({
         failedLoginAttempts: updatedAttempts,
         lockoutUntil,
         updatedAt: new Date().toISOString(),
       })
-      .where(eq(schema.users.id, user.id))
-      .run();
+      .where(eq(schema.users.id, user.id));
 
     await recordFailedAttempt(identRateKey, 5, 15 * 60);
     await recordFailedAttempt(ipRateKey, 30, 15 * 60);
@@ -245,14 +238,13 @@ export async function loginUser(
   }
 
   // 6. في حال النجاح: تصفير المحاولات وتدوير الجلسة (Session Rotation)
-  db.update(schema.users)
+  await db.update(schema.users)
     .set({
       failedLoginAttempts: 0,
       lockoutUntil: null,
       updatedAt: new Date().toISOString(),
     })
-    .where(eq(schema.users.id, user.id))
-    .run();
+    .where(eq(schema.users.id, user.id));
 
   await resetRateLimit(identRateKey);
   await resetRateLimit(ipRateKey);
@@ -313,11 +305,10 @@ export async function seedInitialAdmin(params: {
     throw new Error("الرمز السري لتفويض إنشاء المدير غير صحيح.");
   }
 
-  const existingAdmin = db
+  const [existingAdmin] = await db
     .select({ id: schema.users.id })
     .from(schema.users)
-    .where(eq(schema.users.role, "admin"))
-    .get();
+    .where(eq(schema.users.role, "admin"));
 
   if (existingAdmin) {
     throw new Error(
@@ -353,13 +344,12 @@ export async function seedInitialAdmin(params: {
     updatedAt: now,
   };
 
-  db.insert(schema.users).values(newAdmin).run();
+  await db.insert(schema.users).values(newAdmin);
 
-  const createdUser = db
+  const [createdUser] = await db
     .select()
     .from(schema.users)
-    .where(eq(schema.users.id, userId))
-    .get();
+    .where(eq(schema.users.id, userId));
 
   return sanitizeUser(createdUser!);
 }

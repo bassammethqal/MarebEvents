@@ -1,18 +1,19 @@
 import {
-  sqliteTable,
+  pgTable,
   text,
   integer,
-  real,
+  doublePrecision,
+  boolean,
   primaryKey,
   uniqueIndex,
   index,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // ==============================================================================
 // 1. المستخدمون والمصادقة المحلية (Users & Local Auth)
 // ==============================================================================
-export const users = sqliteTable(
+export const users = pgTable(
   "users",
   {
     id: text("id").primaryKey(), // UUID
@@ -24,7 +25,7 @@ export const users = sqliteTable(
       .notNull()
       .default("customer"),
     avatarUrl: text("avatar_url"),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    isActive: boolean("is_active").notNull().default(true),
     failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
     lockoutUntil: text("lockout_until"),
     createdAt: text("created_at").notNull(),
@@ -38,7 +39,7 @@ export const users = sqliteTable(
 );
 
 // جلسات المصادقة (Auth Sessions)
-export const sessions = sqliteTable(
+export const sessions = pgTable(
   "sessions",
   {
     id: text("id").primaryKey(), // Session token / ID
@@ -55,7 +56,7 @@ export const sessions = sqliteTable(
 );
 
 // سجل حماية محاولات تسجيل الدخول وتحديد المعدل (Rate Limiting)
-export const authRateLimits = sqliteTable("auth_rate_limits", {
+export const authRateLimits = pgTable("auth_rate_limits", {
   key: text("key").primaryKey(), // ip:xxx or ident:xxx
   attempts: integer("attempts").notNull().default(0),
   lastAttemptAt: text("last_attempt_at").notNull(),
@@ -65,17 +66,17 @@ export const authRateLimits = sqliteTable("auth_rate_limits", {
 // ==============================================================================
 // 2. تصنيفات المنشآت وسياستها (Categories & Policies)
 // ==============================================================================
-export const venueCategories = sqliteTable("venue_categories", {
+export const venueCategories = pgTable("venue_categories", {
   id: text("id").primaryKey(),
   slug: text("slug").notNull().unique(),
   nameAr: text("name_ar").notNull(),
   descriptionAr: text("description_ar"),
   displayOrder: integer("display_order").notNull().default(0),
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: text("created_at").notNull(),
 });
 
-export const cancellationPolicies = sqliteTable("cancellation_policies", {
+export const cancellationPolicies = pgTable("cancellation_policies", {
   id: text("id").primaryKey(),
   nameAr: text("name_ar").notNull(),
   descriptionAr: text("description_ar").notNull(),
@@ -86,7 +87,7 @@ export const cancellationPolicies = sqliteTable("cancellation_policies", {
 // ==============================================================================
 // 3. المنشآت والوحدات والأعضاء (Venues, Units, Members)
 // ==============================================================================
-export const venues = sqliteTable(
+export const venues = pgTable(
   "venues",
   {
     id: text("id").primaryKey(),
@@ -99,8 +100,8 @@ export const venues = sqliteTable(
     city: text("city").notNull().default("مأرب"),
     district: text("district").notNull(),
     addressDetails: text("address_details"),
-    latitude: real("latitude"),
-    longitude: real("longitude"),
+    latitude: doublePrecision("latitude"),
+    longitude: doublePrecision("longitude"),
     contactPhone: text("contact_phone").notNull(),
     contactWhatsapp: text("contact_whatsapp"),
     status: text("status", {
@@ -117,13 +118,13 @@ export const venues = sqliteTable(
     })
       .notNull()
       .default("YER"),
-    defaultDepositPercentage: real("default_deposit_percentage")
+    defaultDepositPercentage: doublePrecision("default_deposit_percentage")
       .notNull()
       .default(30.0),
-    hasMultipleUnits: integer("has_multiple_units", { mode: "boolean" })
+    hasMultipleUnits: boolean("has_multiple_units")
       .notNull()
       .default(false),
-    featured: integer("featured", { mode: "boolean" }).notNull().default(false),
+    featured: boolean("featured").notNull().default(false),
     deletedAt: text("deleted_at"),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
@@ -135,7 +136,7 @@ export const venues = sqliteTable(
   ]
 );
 
-export const venueUnits = sqliteTable(
+export const venueUnits = pgTable(
   "venue_units",
   {
     id: text("id").primaryKey(),
@@ -154,7 +155,7 @@ export const venueUnits = sqliteTable(
     }).notNull(),
     capacityMin: integer("capacity_min").notNull().default(0),
     capacityMax: integer("capacity_max").notNull(),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    isActive: boolean("is_active").notNull().default(true),
     deletedAt: text("deleted_at"),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
@@ -165,7 +166,7 @@ export const venueUnits = sqliteTable(
   ]
 );
 
-export const venueMembers = sqliteTable(
+export const venueMembers = pgTable(
   "venue_members",
   {
     id: text("id").primaryKey(),
@@ -190,7 +191,7 @@ export const venueMembers = sqliteTable(
 // ==============================================================================
 // 4. خطط الأسعار والإتاحة المخصصة (Pricing & Availability)
 // ==============================================================================
-export const venueAvailability = sqliteTable(
+export const venueAvailability = pgTable(
   "venue_availability",
   {
     id: text("id").primaryKey(),
@@ -204,11 +205,11 @@ export const venueAvailability = sqliteTable(
     shift: text("shift", {
       enum: ["morning", "evening", "full_day"],
     }).notNull(),
-    isBlocked: integer("is_blocked", { mode: "boolean" })
+    isBlocked: boolean("is_blocked")
       .notNull()
       .default(false),
     blockReason: text("block_reason"),
-    customPrice: real("custom_price"),
+    customPrice: doublePrecision("custom_price"),
     currency: text("currency", {
       enum: ["YER", "SAR", "USD"],
     })
@@ -229,7 +230,7 @@ export const venueAvailability = sqliteTable(
   ]
 );
 
-export const pricingTiers = sqliteTable(
+export const pricingTiers = pgTable(
   "pricing_tiers",
   {
     id: text("id").primaryKey(),
@@ -243,12 +244,12 @@ export const pricingTiers = sqliteTable(
       enum: ["morning", "evening", "full_day"],
     }).notNull(),
     dayOfWeek: integer("day_of_week"), // 0: Sunday .. 6: Saturday
-    isSeasonal: integer("is_seasonal", { mode: "boolean" })
+    isSeasonal: boolean("is_seasonal")
       .notNull()
       .default(false),
     seasonStart: text("season_start"),
     seasonEnd: text("season_end"),
-    price: real("price").notNull(),
+    price: doublePrecision("price").notNull(),
     currency: text("currency", {
       enum: ["YER", "SAR", "USD"],
     })
@@ -268,7 +269,7 @@ export const pricingTiers = sqliteTable(
 // ==============================================================================
 // 5. المرافق والخدمات (Amenities)
 // ==============================================================================
-export const amenities = sqliteTable("amenities", {
+export const amenities = pgTable("amenities", {
   id: text("id").primaryKey(),
   slug: text("slug").notNull().unique(),
   nameAr: text("name_ar").notNull(),
@@ -279,7 +280,7 @@ export const amenities = sqliteTable("amenities", {
   createdAt: text("created_at").notNull(),
 });
 
-export const venueAmenities = sqliteTable(
+export const venueAmenities = pgTable(
   "venue_amenities",
   {
     venueId: text("venue_id")
@@ -288,8 +289,8 @@ export const venueAmenities = sqliteTable(
     amenityId: text("amenity_id")
       .notNull()
       .references(() => amenities.id, { onDelete: "cascade" }),
-    isFree: integer("is_free", { mode: "boolean" }).notNull().default(true),
-    additionalPrice: real("additional_price").notNull().default(0.0),
+    isFree: boolean("is_free").notNull().default(true),
+    additionalPrice: doublePrecision("additional_price").notNull().default(0.0),
     currency: text("currency", {
       enum: ["YER", "SAR", "USD"],
     })
@@ -305,7 +306,7 @@ export const venueAmenities = sqliteTable(
 // ==============================================================================
 // 6. الحجوزات والفتحات المحجوزة (Bookings & Slots)
 // ==============================================================================
-export const bookings = sqliteTable(
+export const bookings = pgTable(
   "bookings",
   {
     id: text("id").primaryKey(),
@@ -322,7 +323,7 @@ export const bookings = sqliteTable(
     })
       .notNull()
       .default("online"),
-    isFullVenue: integer("is_full_venue", { mode: "boolean" })
+    isFullVenue: boolean("is_full_venue")
       .notNull()
       .default(false),
     eventType: text("event_type", {
@@ -357,8 +358,8 @@ export const bookings = sqliteTable(
     })
       .notNull()
       .default("pending_payment"),
-    totalAmount: real("total_amount").notNull(),
-    depositAmount: real("deposit_amount").notNull(),
+    totalAmount: doublePrecision("total_amount").notNull(),
+    depositAmount: doublePrecision("deposit_amount").notNull(),
     currency: text("currency", {
       enum: ["YER", "SAR", "USD"],
     })
@@ -390,7 +391,7 @@ export const bookings = sqliteTable(
   ]
 );
 
-export const bookingRequestedUnits = sqliteTable(
+export const bookingRequestedUnits = pgTable(
   "booking_requested_units",
   {
     id: text("id").primaryKey(),
@@ -418,7 +419,7 @@ export const bookingRequestedUnits = sqliteTable(
 );
 
 // الفتحات المحجوزة لمنع التضارب وحماية التزامن
-export const bookingSlots = sqliteTable(
+export const bookingSlots = pgTable(
   "booking_slots",
   {
     id: text("id").primaryKey(),
@@ -454,7 +455,7 @@ export const bookingSlots = sqliteTable(
 // ==============================================================================
 // 6.1. سجل المدفوعات وأحداث الـ Webhooks (Payments & Webhook Events)
 // ==============================================================================
-export const payments = sqliteTable(
+export const payments = pgTable(
   "payments",
   {
     id: text("id").primaryKey(),
@@ -465,7 +466,7 @@ export const payments = sqliteTable(
       enum: ["kuraimi", "onecash", "floosak", "stripe", "bank_transfer", "mock"],
     }).notNull(),
     providerTransactionId: text("provider_transaction_id").notNull(),
-    amount: real("amount").notNull(),
+    amount: doublePrecision("amount").notNull(),
     currency: text("currency", {
       enum: ["YER", "SAR", "USD"],
     })
@@ -491,7 +492,7 @@ export const payments = sqliteTable(
   ]
 );
 
-export const webhookEvents = sqliteTable(
+export const webhookEvents = pgTable(
   "webhook_events",
   {
     id: text("id").primaryKey(),
@@ -517,7 +518,7 @@ export const webhookEvents = sqliteTable(
   ]
 );
 
-export const bookingGuestDetails = sqliteTable("booking_guest_details", {
+export const bookingGuestDetails = pgTable("booking_guest_details", {
   bookingId: text("booking_id")
     .primaryKey()
     .references(() => bookings.id, { onDelete: "cascade" }),
@@ -527,7 +528,7 @@ export const bookingGuestDetails = sqliteTable("booking_guest_details", {
   createdAt: text("created_at").notNull(),
 });
 
-export const bookingPriceItems = sqliteTable(
+export const bookingPriceItems = pgTable(
   "booking_price_items",
   {
     id: text("id").primaryKey(),
@@ -544,9 +545,9 @@ export const bookingPriceItems = sqliteTable(
       ],
     }).notNull(),
     descriptionAr: text("description_ar").notNull(),
-    unitPrice: real("unit_price").notNull(),
+    unitPrice: doublePrecision("unit_price").notNull(),
     quantity: integer("quantity").notNull().default(1),
-    totalPrice: real("total_price").notNull(),
+    totalPrice: doublePrecision("total_price").notNull(),
     currency: text("currency", {
       enum: ["YER", "SAR", "USD"],
     })
@@ -557,7 +558,7 @@ export const bookingPriceItems = sqliteTable(
   (table) => [index("idx_booking_price_items_booking").on(table.bookingId)]
 );
 
-export const bookingExtras = sqliteTable(
+export const bookingExtras = pgTable(
   "booking_extras",
   {
     id: text("id").primaryKey(),
@@ -568,9 +569,9 @@ export const bookingExtras = sqliteTable(
       onDelete: "set null",
     }),
     nameAr: text("name_ar").notNull(),
-    unitPrice: real("unit_price").notNull(),
+    unitPrice: doublePrecision("unit_price").notNull(),
     quantity: integer("quantity").notNull().default(1),
-    totalPrice: real("total_price").notNull(),
+    totalPrice: doublePrecision("total_price").notNull(),
     currency: text("currency", {
       enum: ["YER", "SAR", "USD"],
     })
@@ -581,7 +582,7 @@ export const bookingExtras = sqliteTable(
   (table) => [index("idx_booking_extras_booking").on(table.bookingId)]
 );
 
-export const bookingAuditLogs = sqliteTable(
+export const bookingAuditLogs = pgTable(
   "booking_audit_logs",
   {
     id: text("id").primaryKey(),
@@ -603,7 +604,7 @@ export const bookingAuditLogs = sqliteTable(
 // ==============================================================================
 // 7. إدارة الصور والوسائط (Media & File Storage - Portable)
 // ==============================================================================
-export const venueImages = sqliteTable(
+export const venueImages = pgTable(
   "venue_images",
   {
     id: text("id").primaryKey(),
@@ -621,7 +622,7 @@ export const venueImages = sqliteTable(
       .notNull()
       .default("local"),
     altText: text("alt_text"),
-    isCover: integer("is_cover", { mode: "boolean" }).notNull().default(false),
+    isCover: boolean("is_cover").notNull().default(false),
     displayOrder: integer("display_order").notNull().default(0),
     createdAt: text("created_at").notNull(),
   },
@@ -634,7 +635,7 @@ export const venueImages = sqliteTable(
 // ==============================================================================
 // 8. التقييمات والمراجعات (Reviews & Ratings)
 // ==============================================================================
-export const reviews = sqliteTable(
+export const reviews = pgTable(
   "reviews",
   {
     id: text("id").primaryKey(),
@@ -651,7 +652,7 @@ export const reviews = sqliteTable(
     cleanlinessRating: integer("cleanliness_rating"),
     serviceRating: integer("service_rating"),
     comment: text("comment"),
-    isApproved: integer("is_approved", { mode: "boolean" })
+    isApproved: boolean("is_approved")
       .notNull()
       .default(true),
     ownerReply: text("owner_reply"),
@@ -667,7 +668,7 @@ export const reviews = sqliteTable(
 // ==============================================================================
 // 9. المفضلة (Favorites)
 // ==============================================================================
-export const favorites = sqliteTable(
+export const favorites = pgTable(
   "favorites",
   {
     id: text("id").primaryKey(),
@@ -688,7 +689,7 @@ export const favorites = sqliteTable(
 // ==============================================================================
 // 10. الإشعارات (Notifications)
 // ==============================================================================
-export const notifications = sqliteTable(
+export const notifications = pgTable(
   "notifications",
   {
     id: text("id").primaryKey(),
@@ -702,7 +703,7 @@ export const notifications = sqliteTable(
     })
       .notNull()
       .default("system"),
-    isRead: integer("is_read", { mode: "boolean" }).notNull().default(false),
+    isRead: boolean("is_read").notNull().default(false),
     actionUrl: text("action_url"),
     createdAt: text("created_at").notNull(),
   },

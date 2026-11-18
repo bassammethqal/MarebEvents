@@ -24,11 +24,10 @@ export async function checkRateLimit(
   const normalizedKey = key.trim().toLowerCase();
   const now = new Date();
 
-  const record = db
+  const [record] = await db
     .select()
     .from(schema.authRateLimits)
-    .where(eq(schema.authRateLimits.key, normalizedKey))
-    .get();
+    .where(eq(schema.authRateLimits.key, normalizedKey));
 
   if (!record) {
     return {
@@ -59,9 +58,8 @@ export async function checkRateLimit(
 
   if (diffSeconds > windowSeconds) {
     // انتهت النافذة الزمنية، يتم تصفير المحاولات تلقائياً
-    db.delete(schema.authRateLimits)
-      .where(eq(schema.authRateLimits.key, normalizedKey))
-      .run();
+    await db.delete(schema.authRateLimits)
+      .where(eq(schema.authRateLimits.key, normalizedKey));
 
     return {
       allowed: true,
@@ -73,10 +71,9 @@ export async function checkRateLimit(
   if (record.attempts >= maxAttempts) {
     // تجاوز المحاولات، يتم فرض قفل إذا لم يكن مفروضاً
     const lockoutUntil = new Date(now.getTime() + lockoutSeconds * 1000).toISOString();
-    db.update(schema.authRateLimits)
+    await db.update(schema.authRateLimits)
       .set({ lockoutUntil })
-      .where(eq(schema.authRateLimits.key, normalizedKey))
-      .run();
+      .where(eq(schema.authRateLimits.key, normalizedKey));
 
     return {
       allowed: false,
@@ -105,11 +102,10 @@ export async function recordFailedAttempt(
   const now = new Date();
   const nowIso = now.toISOString();
 
-  const record = db
+  const [record] = await db
     .select()
     .from(schema.authRateLimits)
-    .where(eq(schema.authRateLimits.key, normalizedKey))
-    .get();
+    .where(eq(schema.authRateLimits.key, normalizedKey));
 
   const newAttempts = (record ? record.attempts : 0) + 1;
   const isLocked = newAttempts >= maxAttempts;
@@ -118,23 +114,21 @@ export async function recordFailedAttempt(
     : null;
 
   if (record) {
-    db.update(schema.authRateLimits)
+    await db.update(schema.authRateLimits)
       .set({
         attempts: newAttempts,
         lastAttemptAt: nowIso,
         lockoutUntil,
       })
-      .where(eq(schema.authRateLimits.key, normalizedKey))
-      .run();
+      .where(eq(schema.authRateLimits.key, normalizedKey));
   } else {
-    db.insert(schema.authRateLimits)
+    await db.insert(schema.authRateLimits)
       .values({
         key: normalizedKey,
         attempts: newAttempts,
         lastAttemptAt: nowIso,
         lockoutUntil,
-      })
-      .run();
+      });
   }
 
   return {
@@ -150,7 +144,6 @@ export async function recordFailedAttempt(
  */
 export async function resetRateLimit(key: string): Promise<void> {
   const normalizedKey = key.trim().toLowerCase();
-  db.delete(schema.authRateLimits)
-    .where(eq(schema.authRateLimits.key, normalizedKey))
-    .run();
+  await db.delete(schema.authRateLimits)
+    .where(eq(schema.authRateLimits.key, normalizedKey));
 }

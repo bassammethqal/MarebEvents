@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
 import { logoutAction } from "@/lib/auth/actions";
-import { sqlite } from "@/db";
+import { db, schema } from "@/db";
+import { eq, sql } from "drizzle-orm";
 import {
   Phone,
   Mail,
@@ -26,10 +27,11 @@ export default async function AccountPage() {
   // Count user bookings
   let bookingsCount = 0;
   try {
-    const row = sqlite
-      .prepare(`SELECT COUNT(*) as count FROM bookings WHERE customer_id = ?`)
-      .get(user.id) as { count: number } | undefined;
-    bookingsCount = row?.count || 0;
+    const [row] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(schema.bookings)
+      .where(eq(schema.bookings.customerId, user.id));
+    bookingsCount = Number(row?.count) || 0;
   } catch {
     bookingsCount = 0;
   }
@@ -37,10 +39,11 @@ export default async function AccountPage() {
   // Count user favorites
   let favoritesCount = 0;
   try {
-    const row = sqlite
-      .prepare(`SELECT COUNT(*) as count FROM favorites WHERE user_id = ?`)
-      .get(user.id) as { count: number } | undefined;
-    favoritesCount = row?.count || 0;
+    const [row] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(schema.favorites)
+      .where(eq(schema.favorites.userId, user.id));
+    favoritesCount = Number(row?.count) || 0;
   } catch {
     favoritesCount = 0;
   }

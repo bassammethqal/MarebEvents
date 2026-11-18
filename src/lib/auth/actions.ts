@@ -31,8 +31,8 @@ export async function registerAction(
 
     const input: RegisterInput = {
       fullName,
-      email,
-      phone,
+      email: email || undefined,
+      phone: phone || undefined,
       password,
       role,
     };
@@ -123,16 +123,14 @@ export async function updateProfileAction(
       if (updates.isActive !== undefined) updatePayload.isActive = updates.isActive;
     }
 
-    db.update(schema.users)
+    await db.update(schema.users)
       .set(updatePayload)
-      .where(eq(schema.users.id, targetUserId))
-      .run();
+      .where(eq(schema.users.id, targetUserId));
 
-    const updated = db
+    const [updated] = await db
       .select()
       .from(schema.users)
-      .where(eq(schema.users.id, targetUserId))
-      .get();
+      .where(eq(schema.users.id, targetUserId));
 
     revalidatePath("/");
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

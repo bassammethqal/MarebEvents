@@ -53,7 +53,7 @@ export async function createSession(
     createdAt: now.toISOString(),
   };
 
-  db.insert(schema.sessions).values(newSession).run();
+  await db.insert(schema.sessions).values(newSession);
 
   // 3. توقيع الرمز الخام تشفيرياً عبر HMAC-SHA256
   const signedCookieValue = signSessionToken(rawToken);
@@ -92,11 +92,10 @@ export async function validateSession(
   // حساب الهاش للبحث في قاعدة البيانات
   const tokenHash = hashSessionToken(rawToken);
 
-  const session = db
+  const [session] = await db
     .select()
     .from(schema.sessions)
-    .where(eq(schema.sessions.id, tokenHash))
-    .get();
+    .where(eq(schema.sessions.id, tokenHash));
 
   if (!session) {
     return null;
@@ -107,20 +106,19 @@ export async function validateSession(
 
   // إذا انتهت صلاحية الجلسة، يتم حذفها فوراً
   if (now >= expiresDate) {
-    db.delete(schema.sessions).where(eq(schema.sessions.id, tokenHash)).run();
+    await db.delete(schema.sessions).where(eq(schema.sessions.id, tokenHash));
     return null;
   }
 
   // استرجاع بيانات المستخدم المرتبط بالجلسة
-  const user = db
+  const [user] = await db
     .select()
     .from(schema.users)
-    .where(eq(schema.users.id, session.userId))
-    .get();
+    .where(eq(schema.users.id, session.userId));
 
   if (!user || !user.isActive) {
     // إذا كان المستخدم محذوفاً أو معطلاً، يتم إلغاء الجلسة
-    db.delete(schema.sessions).where(eq(schema.sessions.id, tokenHash)).run();
+    await db.delete(schema.sessions).where(eq(schema.sessions.id, tokenHash));
     return null;
   }
 
@@ -143,7 +141,7 @@ export async function invalidateSession(tokenOrSignedValue: string): Promise<voi
 
   if (rawToken) {
     const tokenHash = hashSessionToken(rawToken);
-    db.delete(schema.sessions).where(eq(schema.sessions.id, tokenHash)).run();
+    await db.delete(schema.sessions).where(eq(schema.sessions.id, tokenHash));
   }
 }
 
@@ -152,7 +150,7 @@ export async function invalidateSession(tokenOrSignedValue: string): Promise<voi
  */
 export async function invalidateAllUserSessions(userId: string): Promise<void> {
   if (!userId) return;
-  db.delete(schema.sessions).where(eq(schema.sessions.userId, userId)).run();
+  await db.delete(schema.sessions).where(eq(schema.sessions.userId, userId));
 }
 
 /**
@@ -168,9 +166,8 @@ export async function rotateSession(
   }
 
   // تنظيف أي جلسات سابقة لنفس المستخدم
-  db.delete(schema.sessions)
-    .where(eq(schema.sessions.userId, userId))
-    .run();
+  await db.delete(schema.sessions)
+    .where(eq(schema.sessions.userId, userId));
 
   return await createSession(userId);
 }

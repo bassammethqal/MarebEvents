@@ -16,9 +16,11 @@
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "better-sqlite3": "^13.2.0",
+    "dotenv": "^18.0.10",
     "drizzle-orm": "^0.45.4",
     "lucide-react": "^1.73.0",
     "next": "16.4.3",
+    "postgres": "^4.1.1",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

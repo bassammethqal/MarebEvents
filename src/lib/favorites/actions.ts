@@ -1,7 +1,8 @@
 "use server";
 
 import { getCurrentSession } from "@/lib/auth/session";
-import { sqlite } from "@/db";
+import { db, schema } from "@/db";
+import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function toggleFavoriteAction(venueId: string): Promise<{
@@ -23,14 +24,20 @@ export async function toggleFavoriteAction(venueId: string): Promise<{
     const userId = session.user.id;
 
     // Check if favorite exists
-    const existing = sqlite
-      .prepare(`SELECT id FROM favorites WHERE user_id = ? AND venue_id = ?`)
-      .get(userId, venueId) as { id: string } | undefined;
+    const [existing] = await db
+      .select({ id: schema.favorites.id })
+      .from(schema.favorites)
+      .where(
+        and(
+          eq(schema.favorites.userId, userId),
+          eq(schema.favorites.venueId, venueId)
+        )
+      );
 
     if (existing) {
-      sqlite
-        .prepare(`DELETE FROM favorites WHERE id = ?`)
-        .run(existing.id);
+      await db
+        .delete(schema.favorites)
+        .where(eq(schema.favorites.id, existing.id));
 
       revalidatePath("/");
       revalidatePath("/favorites");
@@ -42,11 +49,12 @@ export async function toggleFavoriteAction(venueId: string): Promise<{
     } else {
       const id = crypto.randomUUID();
       const now = new Date().toISOString();
-      sqlite
-        .prepare(
-          `INSERT INTO favorites (id, user_id, venue_id, created_at) VALUES (?, ?, ?, ?)`
-        )
-        .run(id, userId, venueId, now);
+      await db.insert(schema.favorites).values({
+        id,
+        userId,
+        venueId,
+        createdAt: now,
+      });
 
       revalidatePath("/");
       revalidatePath("/favorites");
@@ -69,10 +77,11 @@ export async function toggleFavoriteAction(venueId: string): Promise<{
 export async function getUserFavoriteIds(userId?: string): Promise<string[]> {
   if (!userId) return [];
   try {
-    const rows = sqlite
-      .prepare(`SELECT venue_id FROM favorites WHERE user_id = ?`)
-      .all(userId) as { venue_id: string }[];
-    return rows.map((r) => r.venue_id);
+    const rows = await db
+      .select({ venueId: schema.favorites.venueId })
+      .from(schema.favorites)
+      .where(eq(schema.favorites.userId, userId));
+    return rows.map((r) => r.venueId);
   } catch (error) {
     console.error("Failed to get favorite IDs:", error);
     return [];
