@@ -7,8 +7,6 @@ import {
   MapPin,
   Users,
   Search,
-  ShieldCheck,
-  Clock,
   Sparkles,
   Phone,
   MessageCircle,
@@ -20,6 +18,7 @@ import {
   Waves,
   Coffee,
   Zap,
+  User,
 } from "lucide-react";
 
 interface VenueCardData {
@@ -72,24 +71,21 @@ async function AuthHeader() {
   const user = current?.user;
 
   if (user) {
+    const firstName = user.fullName.trim().split(" ")[0] || user.fullName;
     return (
-      <div className="flex items-center gap-3 bg-slate-900/90 border border-slate-700/80 px-3.5 py-1.5 rounded-xl shadow-sm">
-        <div className="text-right">
-          <div className="text-xs font-bold text-white flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            {user.fullName}
-          </div>
-          <Link
-            href="/my-bookings"
-            className="text-[10px] text-amber-400 hover:text-amber-300 font-medium block"
-          >
-            حجوزاتي ومواعيدي
-          </Link>
-        </div>
+      <div className="flex items-center gap-1.5">
+        <Link
+          href="/my-bookings"
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-200 hover:text-white bg-slate-900/90 border border-slate-800 px-2.5 py-1.5 rounded-xl transition shadow-sm"
+        >
+          <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+          <span className="max-w-[75px] truncate">{firstName}</span>
+        </Link>
         <form action={logoutAction}>
           <button
             type="submit"
-            className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-2.5 py-1 rounded-lg transition font-medium"
+            aria-label="خروج"
+            className="text-[11px] bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-2 py-1.5 rounded-xl transition font-medium"
           >
             خروج
           </button>
@@ -99,20 +95,13 @@ async function AuthHeader() {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Link
-        href="/login"
-        className="text-xs font-semibold text-slate-200 hover:text-white px-3.5 py-2 rounded-xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 transition shadow-sm"
-      >
-        تسجيل الدخول
-      </Link>
-      <Link
-        href="/register"
-        className="text-xs font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 px-4 py-2 rounded-xl transition shadow-md shadow-amber-500/20"
-      >
-        حساب جديد
-      </Link>
-    </div>
+    <Link
+      href="/login"
+      className="flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-800 px-3 py-1.5 rounded-xl transition shadow-sm"
+    >
+      <User className="h-3.5 w-3.5 text-amber-400" />
+      <span>دخول</span>
+    </Link>
   );
 }
 
@@ -126,211 +115,82 @@ export default function HomePage() {
       <div className="pointer-events-none absolute top-1/2 -left-40 h-[600px] w-[600px] rounded-full bg-emerald-500/5 blur-[150px]" />
       <div className="pointer-events-none absolute -bottom-40 right-1/3 h-[500px] w-[500px] rounded-full bg-amber-600/5 blur-[140px]" />
 
-      {/* Top Banner Notice */}
-      <div className="relative z-20 bg-gradient-to-r from-amber-950/80 via-amber-900/60 to-slate-950 border-b border-amber-500/20 py-2 text-center text-xs text-amber-200 px-4 flex items-center justify-center gap-2">
-        <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0 animate-pulse" />
-        <span className="font-bold">منصة مأرب إيفنتس الرسمية:</span>
-        <span className="hidden sm:inline">أول منصة محلية لحجز قاعات واستراحات مأرب مع ضمان منع التعارض الزمني ذرياً بنسبة 100%.</span>
-      </div>
-
-      {/* Main Header / Navigation */}
-      <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl transition">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-300 flex items-center justify-center font-black text-slate-950 text-2xl shadow-lg shadow-amber-500/25 group-hover:scale-105 transition">
-              م
-            </div>
-            <div>
-              <div className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
-                <span>مأرب إيفنتس</span>
-                <span className="text-[10px] text-amber-400 border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 rounded font-bold uppercase">
-                  Mareb
-                </span>
-              </div>
-              <span className="text-[11px] text-slate-400 block font-normal -mt-0.5">
-                بوابتك الموثوقة لحجز القاعات والاستراحات
-              </span>
-            </div>
-          </Link>
-
-          {/* Navigation Links - Mobile Native Clean Header */}
-          <nav className="hidden items-center gap-6 text-sm font-bold text-slate-300">
-            <Link href="/" className="text-amber-400 transition">
-              الرئيسية
-            </Link>
-            <a href="#featured-venues" className="hover:text-amber-300 transition">
-              قاعات الأفراح
-            </a>
-            <a href="#featured-venues" className="hover:text-amber-300 transition">
-              الشاليهات والمنتجعات
-            </a>
-            <a href="#how-it-works" className="hover:text-amber-300 transition">
-              كيف يعمل الحجز؟
-            </a>
-            <a href="#why-us" className="hover:text-amber-300 transition">
-              ضمانات المنصة
-            </a>
-          </nav>
-
-          {/* User Auth Section */}
-          <div className="flex items-center gap-3">
-            <Suspense
-              fallback={
-                <div className="h-9 w-28 rounded-xl bg-slate-900 border border-slate-800 animate-pulse" />
-              }
-            >
-              <AuthHeader />
-            </Suspense>
+      {/* Native Mobile Header (h-14, px-4) */}
+      <header className="sticky top-0 z-40 h-14 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-xl px-4 flex items-center justify-between">
+        {/* Right: App Logo & Name */}
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-300 flex items-center justify-center font-black text-slate-950 text-xl shadow-md shadow-amber-500/20 shrink-0">
+            م
           </div>
-        </div>
+          <span className="text-base font-bold text-white tracking-tight">مأرب إيفنتس</span>
+        </Link>
+
+        {/* Left: User / Login */}
+        <Suspense
+          fallback={
+            <div className="h-8 w-16 rounded-xl bg-slate-900 border border-slate-800 animate-pulse" />
+          }
+        >
+          <AuthHeader />
+        </Suspense>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative z-10 pt-12 pb-20 px-4 sm:px-6 text-center max-w-6xl mx-auto flex flex-col items-center">
-        {/* Location Badge */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-bold text-amber-300 mb-6 shadow-inner">
-          <MapPin className="h-3.5 w-3.5 text-amber-400" />
-          <span>محافظة مأرب، الجمهورية اليمنية</span>
-          <span className="h-1 w-1 rounded-full bg-amber-400" />
-          <span className="text-slate-300 font-normal">حجوزات مباشرة ومؤكدة</span>
-        </div>
-
-        {/* Main Heading (Black 900) */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.15] max-w-4xl mb-6">
-          احجز أرقى <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 bg-clip-text text-transparent">قاعات واستراحات مأرب</span> بكل ثقة وضمان
+      {/* Compact Search & Category Pills Section (px-4 pt-3 pb-2) */}
+      <section className="px-4 pt-3 pb-2">
+        <h1 className="text-lg font-bold text-white tracking-tight">
+          احجز قاعتك أو استراحتك في مأرب
         </h1>
 
-        {/* Subheading (Bold 700) */}
-        <p className="text-base sm:text-lg md:text-xl font-bold text-slate-300 max-w-3xl leading-relaxed mb-10">
-          المنصة الذكية الأولى في محافظة مأرب لتصفح قاعات المناسبات الكبرى والشاليهات والاستراحات العائلية، مع تأكيد فوري ومنع قاطع لأي تعارض في المواعيد.
-        </p>
-
-        {/* Search & Filter Component */}
-        <div className="w-full bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 shadow-2xl shadow-black/60 backdrop-blur-xl text-right">
-          <div className="grid grid-cols-1 gap-2.5 mb-4">
-            {/* Category Select */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
-              <label className="text-[11px] font-bold text-slate-400 block mb-1">نوع المنشأة</label>
-              <select className="w-full bg-transparent text-sm font-bold text-white focus:outline-none cursor-pointer">
-                <option value="" className="bg-slate-900 text-white">جميع التصنيفات</option>
-                <option value="weddings" className="bg-slate-900 text-white">قاعات أفراح ومناسبات</option>
-                <option value="chalets" className="bg-slate-900 text-white">شاليهات ومنتجعات خاصة</option>
-                <option value="resthouses" className="bg-slate-900 text-white">استراحات عائلية</option>
-                <option value="conferences" className="bg-slate-900 text-white">قاعات مؤتمرات وندوات</option>
-              </select>
-            </div>
-
-            {/* Area / District Select */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
-              <label className="text-[11px] font-bold text-slate-400 block mb-1">المنطقة في مأرب</label>
-              <select className="w-full bg-transparent text-sm font-bold text-white focus:outline-none cursor-pointer">
-                <option value="" className="bg-slate-900 text-white">كافة أحياء مأرب</option>
-                <option value="al-majma" className="bg-slate-900 text-white">المجمع (شارع الأربعين / المحافظة)</option>
-                <option value="rawdah" className="bg-slate-900 text-white">الروضة</option>
-                <option value="jow-naseem" className="bg-slate-900 text-white">جو النسيم</option>
-                <option value="faw" className="bg-slate-900 text-white">الفاو</option>
-                <option value="kara" className="bg-slate-900 text-white">كرى والوادي</option>
-              </select>
-            </div>
-
-            {/* Shift Select */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
-              <label className="text-[11px] font-bold text-slate-400 block mb-1">الفترة الزمنية</label>
-              <select className="w-full bg-transparent text-sm font-bold text-white focus:outline-none cursor-pointer">
-                <option value="evening" className="bg-slate-900 text-white">الفترة المسائية (عصراً حتى منتصف الليل)</option>
-                <option value="morning" className="bg-slate-900 text-white">الفترة الصباحية (صباحاً حتى ظهراً)</option>
-                <option value="full_day" className="bg-slate-900 text-white">يوم كامل (صباحاً ومساءً)</option>
-              </select>
-            </div>
-
-            {/* Capacity Select */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
-              <label className="text-[11px] font-bold text-slate-400 block mb-1">سعة الضيوف المتوقعة</label>
-              <select className="w-full bg-transparent text-sm font-bold text-white focus:outline-none cursor-pointer">
-                <option value="" className="bg-slate-900 text-white">أي سعة</option>
-                <option value="small" className="bg-slate-900 text-white">حتى 100 ضيف (عائلي)</option>
-                <option value="medium" className="bg-slate-900 text-white">100 إلى 300 ضيف</option>
-                <option value="large" className="bg-slate-900 text-white">300 إلى 500 ضيف</option>
-                <option value="vip" className="bg-slate-900 text-white">500 إلى 700+ ضيف (كبرى)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1 border-t border-slate-800/80">
-            <div className="text-xs text-slate-400 flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-              <span>فحص فوري ومباشر للتوافر ومنع التعارض الزمني عبر محرك SQLite الذري</span>
-            </div>
-            <a
-              href="#featured-venues"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black px-6 py-3 rounded-xl transition shadow-lg shadow-amber-500/20 text-sm"
-            >
-              <Search className="h-4 w-4" />
-              <span>استعرض القاعات المتاحة</span>
-            </a>
-          </div>
+        {/* Full-width Search Input */}
+        <div className="relative mt-2.5 mb-2.5">
+          <input
+            type="text"
+            placeholder="ابحث بالاسم أو الحي (المجمع، الروضة...)"
+            className="w-full rounded-xl bg-slate-900 border border-slate-800 pl-10 pr-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400/60 transition shadow-inner"
+          />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
         </div>
 
-        {/* Trust Badges */}
-        <div className="grid grid-cols-2 gap-3 w-full mt-8 text-right">
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-base font-black text-white">100% منع التعارض</div>
-              <div className="text-xs text-slate-400 font-normal">حماية ذرية للمواعيد</div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-base font-black text-white">منشآت معتمدة</div>
-              <div className="text-xs text-slate-400 font-normal">مفحوصة ميدانياً في مأرب</div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
-              <Clock className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-base font-black text-white">تأكيد فوري</div>
-              <div className="text-xs text-slate-400 font-normal">ودفع آمن بالعربون</div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
-              <Phone className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-base font-black text-white">دعم محلي 24/7</div>
-              <div className="text-xs text-slate-400 font-normal">فريق مباشر في مأرب</div>
-            </div>
-          </div>
+        {/* Horizontal Scrollable Category Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-medium no-scrollbar">
+          <button className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-400 text-slate-950 shadow-sm shrink-0">
+            الكل
+          </button>
+          <a
+            href="#featured-venues"
+            className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 shrink-0 transition"
+          >
+            قاعات أفراح
+          </a>
+          <a
+            href="#featured-venues"
+            className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 shrink-0 transition"
+          >
+            شاليهات
+          </a>
+          <a
+            href="#featured-venues"
+            className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 shrink-0 transition"
+          >
+            استراحات
+          </a>
+          <a
+            href="#featured-venues"
+            className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 shrink-0 transition"
+          >
+            مؤتمرات
+          </a>
         </div>
       </section>
 
       {/* Featured Venues Section */}
-      <section id="featured-venues" className="relative z-10 py-16 px-4 sm:px-6 max-w-7xl mx-auto w-full">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10 border-b border-slate-800 pb-5">
-          <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 mb-2">
-              <Crown className="h-4 w-4" />
-              <span>الخيارات الأكثر طلباً في مأرب</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              أبرز قاعات واستراحات مأرب المعتمدة
-            </h2>
+      <section id="featured-venues" className="px-4 pt-3 pb-8 w-full">
+        <div className="flex items-center justify-between mb-3 border-b border-slate-800/80 pb-2">
+          <div className="flex items-center gap-1.5 text-sm font-bold text-white">
+            <Crown className="h-4 w-4 text-amber-400 shrink-0" />
+            <span>أبرز قاعات واستراحات مأرب</span>
           </div>
-          <p className="text-sm font-normal text-slate-400 max-w-md">
-            استعرض المنشآت المفحوصة والمحدثة أسعارها مباشرة، واختر الفترة المناسبة لمناسبتك بكل طمأنينة.
-          </p>
+          <span className="text-[11px] text-amber-400 font-semibold">{venues.length} منشأة</span>
         </div>
 
         {venues.length === 0 ? (
