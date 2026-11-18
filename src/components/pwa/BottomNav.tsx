@@ -33,16 +33,16 @@ export function BottomNav() {
     },
     {
       name: "حسابي",
-      href: "/login",
+      href: "/account",
       icon: User,
-      isActive: pathname.startsWith("/login") || pathname.startsWith("/account"),
+      isActive: pathname.startsWith("/account") || pathname.startsWith("/login"),
     },
   ];
 
   return (
     <nav
       aria-label="التنقل السفلي للتطبيق"
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-40 bg-white/95 backdrop-blur-md border-t border-slate-100 transition-all duration-300 pb-[env(safe-area-inset-bottom,8px)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 transition-all duration-300 pb-[env(safe-area-inset-bottom,8px)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
     >
       <div className="grid grid-cols-4 h-18 w-full items-center px-2 py-1">
         {navItems.map((item) => {
@@ -52,12 +52,14 @@ export function BottomNav() {
               key={item.name}
               href={item.href}
               className={`flex flex-col items-center justify-center gap-1 transition-all duration-200 py-1 ${
-                item.isActive ? "text-amber-700 font-bold" : "text-slate-400 hover:text-slate-600"
+                item.isActive
+                  ? "text-amber-700 dark:text-amber-400 font-bold"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
               }`}
             >
               <div
                 className={`relative flex items-center justify-center w-10 h-8 rounded-2xl transition-all duration-200 ${
-                  item.isActive ? "bg-amber-500/15 text-amber-700" : ""
+                  item.isActive ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" : ""
                 }`}
               >
                 <Icon className={`w-5 h-5 ${item.isActive ? "stroke-[2.5]" : "stroke-[1.8]"}`} />

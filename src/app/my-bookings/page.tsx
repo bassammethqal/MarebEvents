@@ -8,16 +8,15 @@ export const instant = false;
 
 interface BookingRecord {
   id: string;
-  booking_number: string;
+  booking_reference: string;
   venue_name: string;
   venue_city: string;
   venue_district: string;
-  start_date: string;
-  end_date: string;
+  event_date: string;
   shift: string;
   status: string;
-  payment_status: string;
-  total_price: number;
+  total_amount: number;
+  deposit_amount: number;
   currency: string;
 }
 
@@ -26,16 +25,15 @@ function getCustomerBookings(userId: string): BookingRecord[] {
     const query = `
       SELECT 
         b.id,
-        b.booking_number,
+        b.booking_reference,
         v.name as venue_name,
         v.city as venue_city,
         v.district as venue_district,
-        b.start_date,
-        b.end_date,
+        b.event_date,
         b.shift,
         b.status,
-        b.payment_status,
-        b.total_price,
+        b.total_amount,
+        b.deposit_amount,
         b.currency
       FROM bookings b
       JOIN venues v ON v.id = b.venue_id
@@ -52,26 +50,27 @@ function getCustomerBookings(userId: string): BookingRecord[] {
 function getStatusBadge(status: string) {
   switch (status) {
     case "confirmed":
-      return { label: "مؤكد", bg: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" };
+      return { label: "مؤكد", bg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" };
     case "pending_owner_approval":
-      return { label: "بانتظار موافقة المالك", bg: "bg-amber-500/15 text-amber-300 border-amber-500/30" };
+      return { label: "بانتظار موافقة الإدارة", bg: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800" };
     case "pending_payment":
-      return { label: "بانتظار الدفع", bg: "bg-blue-500/15 text-blue-300 border-blue-500/30" };
-    case "cancelled":
-      return { label: "ملغي", bg: "bg-red-500/15 text-red-400 border-red-500/30" };
+      return { label: "بانتظار الدفع", bg: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800" };
+    case "cancelled_by_customer":
+    case "cancelled_by_owner":
+      return { label: "ملغي", bg: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800" };
     case "completed":
-      return { label: "مكتمل", bg: "bg-slate-700/40 text-slate-300 border-slate-600/40" };
+      return { label: "مكتمل", bg: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700" };
     default:
-      return { label: status, bg: "bg-slate-800 text-slate-300 border-slate-700" };
+      return { label: status, bg: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700" };
   }
 }
 
 function getShiftLabel(shift: string) {
   switch (shift) {
     case "morning":
-      return "الفترة الصباحية (9:00 ص - 2:00 م)";
+      return "صباحية (9:00 ص - 2:00 م)";
     case "evening":
-      return "الفترة المسائية (4:00 م - 11:30 م)";
+      return "مسائية (4:00 م - 11:30 م)";
     case "full_day":
       return "يوم كامل (24 ساعة)";
     default:
@@ -85,17 +84,19 @@ async function BookingsContent() {
 
   if (!user) {
     return (
-      <div className="max-w-md mx-auto text-center py-16 px-4">
-        <div className="h-16 w-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 text-amber-400">
+      <div className="max-w-md mx-auto text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs">
+        <div className="h-16 w-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center mx-auto mb-4 text-amber-600 dark:text-amber-400">
           <CalendarCheck className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">متابعة وإدارة حجوزاتك</h2>
-        <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-2">
+          متابعة وإدارة حجوزاتك
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed max-w-xs mx-auto">
           سجل دخولك لتتمكن من تتبع حالة طلباتك، مواعيد المناسبات، وتفاصيل الدفع وموافقة إدارة القاعات.
         </p>
         <Link
           href="/login?next=/my-bookings"
-          className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm py-3.5 px-6 rounded-xl shadow-lg shadow-amber-500/20 transition active:scale-95"
+          className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs py-3 px-6 rounded-xl transition shadow-xs active:scale-95"
         >
           تسجيل الدخول إلى حسابك
         </Link>
@@ -107,17 +108,19 @@ async function BookingsContent() {
 
   if (bookings.length === 0) {
     return (
-      <div className="max-w-md mx-auto text-center py-16 px-4">
-        <div className="h-16 w-16 rounded-2xl bg-slate-800/60 border border-slate-700/50 flex items-center justify-center mx-auto mb-4 text-slate-400">
+      <div className="max-w-md mx-auto text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs">
+        <div className="h-16 w-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4 text-slate-400">
           <Building2 className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">لا توجد حجوزات حتى الآن</h2>
-        <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-          استكشف أرقى قاعات المناسبات والشاليهات والاستراحات في مدينة مأرب واحجز موعدك بسهولة.
+        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-2">
+          لا توجد حجوزات حتى الآن
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed max-w-xs mx-auto">
+          استكشف أرقى قاعات المناسبات والشاليهات والاستراحات في مدينة مأرب واحجز موعدك بسهولة وبضمان ذري.
         </p>
         <Link
           href="/"
-          className="inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm py-3 px-6 rounded-xl border border-slate-700 transition"
+          className="inline-flex items-center justify-center gap-2 bg-slate-900 dark:bg-amber-500 text-white dark:text-slate-950 font-bold text-xs py-2.5 px-6 rounded-xl transition shadow-xs"
         >
           تصفح القاعات المتاحة
         </Link>
@@ -126,54 +129,58 @@ async function BookingsContent() {
   }
 
   return (
-    <div className="space-y-4 max-w-xl mx-auto pb-12">
+    <div className="space-y-4 pb-12">
       {bookings.map((b) => {
         const badge = getStatusBadge(b.status);
         return (
           <div
             key={b.id}
-            className="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition"
+            className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-4 shadow-xs hover:shadow-md transition"
           >
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
                 <span className="text-[10px] font-mono text-slate-400 block mb-0.5">
-                  رقم الحجز: #{b.booking_number}
+                  رقم المرجع: {b.booking_reference}
                 </span>
-                <h3 className="text-base font-bold text-white">{b.venue_name}</h3>
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
-                  <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {b.venue_name}
+                </h3>
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                   <span>
                     {b.venue_city} - {b.venue_district}
                   </span>
                 </div>
               </div>
               <span
-                className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${badge.bg}`}
+                className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${badge.bg}`}
               >
                 {badge.label}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-slate-800/60 mb-3">
+            <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl mb-3">
               <div>
                 <span className="text-slate-400 block text-[10px]">تاريخ الحجز:</span>
-                <span className="font-semibold text-slate-200">{b.start_date}</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{b.event_date}</span>
               </div>
               <div>
                 <span className="text-slate-400 block text-[10px]">الفترة:</span>
-                <span className="font-semibold text-slate-200">{getShiftLabel(b.shift)}</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  {getShiftLabel(b.shift)}
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
               <div>
                 <span className="text-[10px] text-slate-400 block">إجمالي المبلغ:</span>
-                <span className="text-sm font-bold text-amber-400">
-                  {b.total_price.toLocaleString("ar-YE")} {b.currency}
+                <span className="text-sm font-black text-amber-600 dark:text-amber-400">
+                  {b.total_amount.toLocaleString("ar-YE")} {b.currency}
                 </span>
               </div>
-              <span className="text-[11px] text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-md">
-                حالة الدفع: {b.payment_status === "paid" ? "مدفوع ✓" : "غير مدفوع"}
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
+                العربون: {b.deposit_amount.toLocaleString("ar-YE")} {b.currency}
               </span>
             </div>
           </div>
@@ -185,15 +192,17 @@ async function BookingsContent() {
 
 export default function MyBookingsPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 px-4 py-6 md:py-10">
-      <div className="max-w-xl mx-auto mb-6 flex items-center justify-between border-b border-slate-800/80 pb-4">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-4 py-6">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-6">
         <div>
-          <h1 className="text-xl font-bold text-white">حجوزاتي</h1>
-          <p className="text-xs text-slate-400">متابعة كافة طلباتك ومواعيد مناسباتك</p>
+          <h1 className="text-lg font-black">حجوزاتي</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            متابعة كافة طلباتك ومواعيد مناسباتك
+          </p>
         </div>
         <Link
           href="/"
-          className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold"
+          className="text-xs text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 font-bold"
         >
           <span>الرئيسية</span>
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -202,7 +211,7 @@ export default function MyBookingsPage() {
 
       <Suspense
         fallback={
-          <div className="max-w-md mx-auto py-16 text-center text-slate-400 text-sm">
+          <div className="max-w-md mx-auto py-16 text-center text-slate-400 text-xs">
             جاري تحميل الحجوزات...
           </div>
         }
