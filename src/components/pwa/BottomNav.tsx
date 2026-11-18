@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Compass, CalendarCheck, User } from "lucide-react";
+import { Home3D, Explore3D, Bookings3D, Account3D } from "@/components/ui/Icons3D";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -12,57 +12,80 @@ export function BottomNav() {
     return null;
   }
 
+  let activeIndex = 0;
+  if (pathname.startsWith("/explore") || pathname.startsWith("/venues") || pathname.startsWith("/categories")) {
+    activeIndex = 1;
+  } else if (pathname.startsWith("/my-bookings")) {
+    activeIndex = 2;
+  } else if (pathname.startsWith("/account") || pathname.startsWith("/login")) {
+    activeIndex = 3;
+  } else if (pathname === "/") {
+    activeIndex = 0;
+  }
+
   const navItems = [
     {
       name: "الرئيسية",
       href: "/",
-      icon: Home,
-      isActive: pathname === "/",
+      icon: Home3D,
+      isActive: activeIndex === 0,
     },
     {
       name: "اكتشف",
       href: "/explore",
-      icon: Compass,
-      isActive: pathname.startsWith("/explore") || pathname.startsWith("/venues") || pathname.startsWith("/categories"),
+      icon: Explore3D,
+      isActive: activeIndex === 1,
     },
     {
       name: "حجوزاتي",
       href: "/my-bookings",
-      icon: CalendarCheck,
-      isActive: pathname.startsWith("/my-bookings"),
+      icon: Bookings3D,
+      isActive: activeIndex === 2,
     },
     {
       name: "حسابي",
       href: "/account",
-      icon: User,
-      isActive: pathname.startsWith("/account") || pathname.startsWith("/login"),
+      icon: Account3D,
+      isActive: activeIndex === 3,
     },
   ];
 
   return (
     <nav
       aria-label="التنقل السفلي للتطبيق"
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 transition-all duration-300 pb-[env(safe-area-inset-bottom,8px)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
+      className="fixed bottom-3 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] max-w-[406px] z-40 rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-[0_12px_32px_rgba(15,23,42,0.12)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.5)] transition-all duration-300"
     >
-      <div className="grid grid-cols-4 h-18 w-full items-center px-2 py-1">
+      <div className="relative grid grid-cols-4 h-16 w-full items-center p-1.5">
+        {/* مؤشر الخلفية المنزلق فيزيائياً بنعومة ومرونة */}
+        <div
+          aria-hidden="true"
+          className="absolute top-1.5 bottom-1.5 rounded-2xl bg-gradient-to-b from-amber-500/18 to-amber-500/5 dark:from-amber-400/25 dark:to-amber-500/10 border border-amber-500/30 dark:border-amber-400/40 shadow-[0_4px_16px_rgba(245,158,11,0.2)] pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+          style={{
+            width: "calc(25% - 8px)",
+            right: `calc(${activeIndex * 25}% + 4px)`,
+          }}
+        />
+
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`flex flex-col items-center justify-center gap-1 transition-all duration-200 py-1 ${
+              className={`relative z-10 flex flex-col items-center justify-center gap-0.5 py-1 transition-all duration-300 active:scale-95 ${
                 item.isActive
-                  ? "text-amber-700 dark:text-amber-400 font-bold"
-                  : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                  ? "text-amber-800 dark:text-amber-300 font-black"
+                  : "text-slate-500 dark:text-slate-400 font-medium hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
               <div
-                className={`relative flex items-center justify-center w-10 h-8 rounded-2xl transition-all duration-200 ${
-                  item.isActive ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" : ""
+                className={`relative flex items-center justify-center transition-all duration-300 ${
+                  item.isActive
+                    ? "-translate-y-0.5 scale-110 drop-shadow-[0_4px_8px_rgba(245,158,11,0.35)]"
+                    : "opacity-75 hover:opacity-100"
                 }`}
               >
-                <Icon className={`w-5 h-5 ${item.isActive ? "stroke-[2.5]" : "stroke-[1.8]"}`} />
+                <Icon className="w-6 h-6" active={item.isActive} />
               </div>
               <span className="text-[11px] tracking-tight">{item.name}</span>
             </Link>

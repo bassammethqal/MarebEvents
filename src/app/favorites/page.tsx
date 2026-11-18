@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
 import { sqlite } from "@/db";
-import { Heart, ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { FavoriteButton } from "@/components/ui/FavoriteButton";
+import { Heart3D, Pin3D } from "@/components/ui/Icons3D";
 
 export const instant = false;
 
@@ -63,8 +64,8 @@ export default async function FavoritesPage() {
         </div>
 
         <div className="text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center mx-auto mb-3 text-rose-500">
-            <Heart className="w-7 h-7" />
+          <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center mx-auto mb-3">
+            <Heart3D className="w-8 h-8" active={true} />
           </div>
           <h2 className="text-base font-bold mb-2">سجل دخولك لعرض المفضلة</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed max-w-xs mx-auto">
@@ -103,8 +104,8 @@ export default async function FavoritesPage() {
 
       {favorites.length === 0 ? (
         <div className="text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center mx-auto mb-3 text-rose-500">
-            <Heart className="w-7 h-7" />
+          <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center mx-auto mb-3">
+            <Heart3D className="w-8 h-8" active={true} />
           </div>
           <h2 className="text-base font-bold mb-1">قائمتك المفضلة فارغة حالياً</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed max-w-xs mx-auto">
@@ -148,8 +149,8 @@ export default async function FavoritesPage() {
                   <h3 className="font-bold text-base text-slate-900 dark:text-white leading-snug">
                     {venue.name}
                   </h3>
-                  <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">
-                    <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">
+                    <Pin3D className="w-4 h-4 shrink-0" />
                     <span>
                       {venue.city} - {venue.district}
                     </span>

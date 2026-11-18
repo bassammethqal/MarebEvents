@@ -4,7 +4,8 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { logoutAction } from "@/lib/auth/actions";
 import { sqlite } from "@/db";
 import { getUserFavoriteIds } from "@/lib/favorites/actions";
-import { MapPin, Crown, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
+import { Pin3D, Wedding3D } from "@/components/ui/Icons3D";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { NotificationPopover } from "@/components/ui/NotificationPopover";
 import {
@@ -104,7 +105,7 @@ export default async function HomePage() {
 
         {/* Center: Location Capsule */}
         <div className="bg-slate-100/80 dark:bg-slate-800/80 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-center shadow-2xs">
-          <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+          <Pin3D className="w-4 h-4 shrink-0" />
           <div className="text-right">
             <div className="text-[10px] text-slate-400 font-medium leading-none">
               موقعك الحالي
@@ -195,7 +196,7 @@ export default async function HomePage() {
       <section className="px-4 py-6">
         <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-3xl p-5 text-right">
           <div className="flex items-center gap-2 mb-2">
-            <Crown className="w-4 h-4 text-amber-600" />
+            <Wedding3D className="w-5 h-5 shrink-0" />
             <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
               ضمان حجز مأرب الذري 100%
             </h3>

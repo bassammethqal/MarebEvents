@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
 import { sqlite } from "@/db";
-import { CalendarCheck, MapPin, ArrowLeft, Building2 } from "lucide-react";
+import { ArrowLeft, Building2 } from "lucide-react";
+import { Bookings3D, Pin3D } from "@/components/ui/Icons3D";
 
 export const instant = false;
 
@@ -85,8 +86,8 @@ async function BookingsContent() {
   if (!user) {
     return (
       <div className="max-w-md mx-auto text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs">
-        <div className="h-16 w-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center mx-auto mb-4 text-amber-600 dark:text-amber-400">
-          <CalendarCheck className="w-8 h-8" />
+        <div className="h-16 w-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center mx-auto mb-4">
+          <Bookings3D className="w-10 h-10" active={true} />
         </div>
         <h2 className="text-base font-bold text-slate-900 dark:text-white mb-2">
           متابعة وإدارة حجوزاتك
@@ -146,7 +147,7 @@ async function BookingsContent() {
                   {b.venue_name}
                 </h3>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <Pin3D className="w-4 h-4 shrink-0" />
                   <span>
                     {b.venue_city} - {b.venue_district}
                   </span>

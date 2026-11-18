@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Heart } from "lucide-react";
+import { Heart3D } from "@/components/ui/Icons3D";
 import { toggleFavoriteAction } from "@/lib/favorites/actions";
 
 interface FavoriteButtonProps {
@@ -59,16 +59,13 @@ export function FavoriteButton({
       onClick={handleToggle}
       disabled={isLoading}
       aria-label={isFavorited ? "إزالة من المفضلة" : "إضافة إلى المفضلة"}
-      className={`w-8 h-8 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm flex items-center justify-center shadow-sm transition active:scale-90 hover:scale-105 ${
-        isFavorited
-          ? "text-rose-500 fill-rose-500"
-          : "text-slate-400 hover:text-rose-500"
-      } ${className}`}
+      className={`w-9 h-9 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/80 flex items-center justify-center shadow-xs transition-all duration-300 active:scale-85 hover:scale-110 cursor-pointer ${className}`}
     >
-      <Heart
-        className={`w-4 h-4 transition duration-200 ${
-          isFavorited ? "fill-rose-500 text-rose-500" : "fill-transparent"
+      <Heart3D
+        className={`w-5 h-5 transition-transform duration-300 ${
+          isFavorited ? "scale-110 drop-shadow-[0_2px_8px_rgba(225,29,72,0.4)]" : "opacity-75 hover:opacity-100"
         }`}
+        active={isFavorited}
       />
     </button>
   );

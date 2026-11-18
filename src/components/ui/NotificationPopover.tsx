@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Bell, CheckCheck, X, Sparkles, AlertCircle, Calendar } from "lucide-react";
+import { CheckCheck, X, Sparkles, AlertCircle, Calendar } from "lucide-react";
+import { Bell3D } from "@/components/ui/Icons3D";
 import {
   getUserNotificationsAction,
   markNotificationReadAction,
@@ -103,15 +104,9 @@ export function NotificationPopover() {
         }}
         aria-label="التنبيهات"
         aria-expanded={isOpen}
-        className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-2xs relative active:scale-95"
+        className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-2xs relative active:scale-95 cursor-pointer"
       >
-        <Bell className="w-4 h-4" />
-        {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500 ring-2 ring-white dark:ring-slate-900" />
-          </span>
-        )}
+        <Bell3D className="w-5 h-5 transition-transform duration-200 hover:rotate-12" hasNotification={unreadCount > 0} />
       </button>
 
       {isOpen && (
@@ -154,8 +149,8 @@ export function NotificationPopover() {
           <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
             {authenticated === false ? (
               <div className="p-6 text-center">
-                <div className="w-12 h-12 bg-amber-50 dark:bg-amber-950/50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-amber-600 dark:text-amber-400">
-                  <Bell className="w-6 h-6" />
+                <div className="w-12 h-12 bg-amber-50 dark:bg-amber-950/50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Bell3D className="w-7 h-7" hasNotification={false} />
                 </div>
                 <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1">
                   سجل دخولك لتصلك الإشعارات
@@ -177,7 +172,7 @@ export function NotificationPopover() {
               </div>
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center">
-                <Bell className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
+                <Bell3D className="w-9 h-9 mx-auto mb-2 opacity-60" hasNotification={false} />
                 <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
                   لا توجد إشعارات حالياً
                 </p>

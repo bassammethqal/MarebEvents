@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  MapPin,
   Sparkles,
   Users,
   Search,
@@ -11,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { FavoriteButton } from "@/components/ui/FavoriteButton";
+import { Pin3D } from "@/components/ui/Icons3D";
 
 export interface VenueItem {
   id: string;
@@ -201,8 +201,8 @@ export function VenueFeedWithFilter({
                     </h3>
                   </Link>
 
-                  <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">
-                    <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">
+                    <Pin3D className="w-4 h-4 shrink-0" />
                     <span>
                       {venue.city} - {venue.district}
                     </span>

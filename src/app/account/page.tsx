@@ -6,12 +6,11 @@ import { sqlite } from "@/db";
 import {
   Phone,
   Mail,
-  CalendarCheck,
-  Heart,
   LogOut,
   ChevronLeft,
   Smartphone,
 } from "lucide-react";
+import { Bookings3D, Heart3D } from "@/components/ui/Icons3D";
 
 export const instant = false;
 
@@ -97,8 +96,8 @@ export default async function AccountPage() {
           className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <CalendarCheck className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+              <Bookings3D className="w-5 h-5" active={true} />
             </div>
             <div>
               <div className="font-bold text-xs text-slate-900 dark:text-white">حجوزاتي</div>
@@ -118,8 +117,8 @@ export default async function AccountPage() {
           className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
-              <Heart className="w-5 h-5 fill-rose-500/20" />
+            <div className="w-9 h-9 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
+              <Heart3D className="w-5 h-5" active={true} />
             </div>
             <div>
               <div className="font-bold text-xs text-slate-900 dark:text-white">القاعات المفضلة</div>
