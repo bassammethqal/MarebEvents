@@ -83,8 +83,10 @@ async function UserStatusHeader() {
 }
 
 export default async function HomePage() {
-  const venues = await getFeaturedVenues();
-  const session = await getCurrentSession();
+  const [venues, session] = await Promise.all([
+    getFeaturedVenues(),
+    getCurrentSession(),
+  ]);
   const favoriteVenueIds = session?.user
     ? await getUserFavoriteIds(session.user.id)
     : [];
@@ -206,13 +208,13 @@ export default async function HomePage() {
           </p>
           <div className="flex items-center justify-between pt-2 border-t border-amber-200/50 dark:border-amber-900/40 text-[11px]">
             <a
-              href="https://wa.me/967777123456"
+              href="https://wa.me/967773461637"
               target="_blank"
               rel="noopener noreferrer"
               className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1 hover:underline"
             >
               <MessageCircle className="w-3.5 h-3.5" />
-              <span>واتساب الدعم: 777123456</span>
+              <span>واتساب الدعم: 773461637</span>
             </a>
             <span className="text-slate-400">مأرب، اليمن</span>
           </div>

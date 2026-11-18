@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import { client } from "@/db";
 import { BOOKING_CONFIG } from "./config";
 import { transitionBookingStatus } from "./service";
 import type { Booking } from "@/db/schema";
@@ -14,7 +14,7 @@ export interface SweeperRunResult {
  * معالج المهام الموقوتة وتنظيف الحجوزات المنتهية (Booking Lifecycle Sweeper)
  * يحرر الفتحات فورياً وينقل الحجوزات لحالاتها النظامية المستحقة
  */
-export function runBookingSweeper(sqlite: Database.Database): SweeperRunResult {
+export async function runBookingSweeper(): Promise<SweeperRunResult> {
   const nowIso = new Date().toISOString();
   const result: SweeperRunResult = {
     expiredPayments: 0,
@@ -24,18 +24,16 @@ export function runBookingSweeper(sqlite: Database.Database): SweeperRunResult {
   };
 
   // 1. معالجة الحجوزات المنتهية في مرحلة السداد (pending_payment -> expired)
-  const expiredPaymentBookings = sqlite
-    .prepare(`
-      SELECT * FROM bookings 
-      WHERE status = 'pending_payment' 
-        AND expires_at IS NOT NULL 
-        AND expires_at <= ?
-    `)
-    .all(nowIso) as Booking[];
+  const expiredPaymentBookings = await client<Booking[]>`
+    SELECT * FROM bookings 
+    WHERE status = 'pending_payment' 
+      AND expires_at IS NOT NULL 
+      AND expires_at <= ${nowIso}
+  `;
 
   for (const booking of expiredPaymentBookings) {
     try {
-      transitionBookingStatus(sqlite, booking.id, "expired", {
+      await transitionBookingStatus(booking.id, "expired", {
         role: "system",
         reason: "PAYMENT_WINDOW_EXPIRED",
       });
@@ -49,19 +47,17 @@ export function runBookingSweeper(sqlite: Database.Database): SweeperRunResult {
   }
 
   // 2. معالجة تعثر رد المالك (pending_owner_approval -> owner_review_timed_out)
-  const timedOutOwnerBookings = sqlite
-    .prepare(`
-      SELECT * FROM bookings 
-      WHERE status = 'pending_owner_approval' 
-        AND owner_review_expires_at IS NOT NULL 
-        AND owner_review_expires_at <= ?
-    `)
-    .all(nowIso) as Booking[];
+  const timedOutOwnerBookings = await client<Booking[]>`
+    SELECT * FROM bookings 
+    WHERE status = 'pending_owner_approval' 
+      AND owner_review_expires_at IS NOT NULL 
+      AND owner_review_expires_at <= ${nowIso}
+  `;
 
   for (const booking of timedOutOwnerBookings) {
     try {
       // نقل الحالة إلى مؤقت رد المالك
-      transitionBookingStatus(sqlite, booking.id, "owner_review_timed_out", {
+      await transitionBookingStatus(booking.id, "owner_review_timed_out", {
         role: "system",
         reason: "OWNER_REVIEW_TIMEOUT_ESCALATED_TO_ADMIN",
       });
@@ -71,13 +67,11 @@ export function runBookingSweeper(sqlite: Database.Database): SweeperRunResult {
         Date.now() + BOOKING_CONFIG.ADMIN_ESCALATION_HOURS * 3600 * 1000
       ).toISOString();
 
-      sqlite
-        .prepare(`
-          UPDATE bookings 
-          SET admin_escalation_expires_at = ? 
-          WHERE id = ?
-        `)
-        .run(adminEscalationExpiresAt, booking.id);
+      await client`
+        UPDATE bookings 
+        SET admin_escalation_expires_at = ${adminEscalationExpiresAt} 
+        WHERE id = ${booking.id}
+      `;
 
       result.timedOutOwnerReviews++;
     } catch (err: unknown) {
@@ -89,18 +83,16 @@ export function runBookingSweeper(sqlite: Database.Database): SweeperRunResult {
   }
 
   // 3. معالجة انقضاء مهلة التصعيد الإداري (owner_review_timed_out -> expired)
-  const expiredEscalations = sqlite
-    .prepare(`
-      SELECT * FROM bookings 
-      WHERE status = 'owner_review_timed_out' 
-        AND admin_escalation_expires_at IS NOT NULL 
-        AND admin_escalation_expires_at <= ?
-    `)
-    .all(nowIso) as Booking[];
+  const expiredEscalations = await client<Booking[]>`
+    SELECT * FROM bookings 
+    WHERE status = 'owner_review_timed_out' 
+      AND admin_escalation_expires_at IS NOT NULL 
+      AND admin_escalation_expires_at <= ${nowIso}
+  `;
 
   for (const booking of expiredEscalations) {
     try {
-      transitionBookingStatus(sqlite, booking.id, "expired", {
+      await transitionBookingStatus(booking.id, "expired", {
         role: "system",
         reason: "ADMIN_ESCALATION_TIMEOUT_RELEASED",
       });

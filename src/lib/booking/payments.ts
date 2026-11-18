@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import type Database from "better-sqlite3";
+import { client } from "@/db";
 import type { Booking, Payment } from "@/db/schema";
 import { transitionBookingStatus } from "./service";
 import type {
@@ -44,11 +45,11 @@ export function verifyWebhookSignature(
  * معالج عمليات الدفع والـ Webhooks المنفصل عن جلسات المستخدمين
  * يفصل تماماً بين الحالة المالية وسجل الحسابات وبين دورة حياة الحجز التشغيلية
  */
-export function processPaymentWebhook(
+export async function processPaymentWebhook(
   sqlite: Database.Database,
   payload: PaymentWebhookPayload,
   rawPayloadString: string
-): PaymentProcessingResult {
+): Promise<PaymentProcessingResult> {
   const {
     provider,
     eventId,
@@ -259,10 +260,9 @@ export function processPaymentWebhook(
 
     // 8. تحديث حالة الحجز إذا كانت مستحقة
     if (shouldUpdateBooking) {
-      transitionBookingStatus(sqlite, booking.id, "confirmed", {
-        role: "system",
-        reason: `PAYMENT_RECEIVED_VIA_${provider.toUpperCase()}_TX_${providerTransactionId}`,
-      });
+      sqlite
+        .prepare(`UPDATE bookings SET status = 'confirmed', updated_at = ? WHERE id = ?`)
+        .run(nowIso, booking.id);
     }
 
     // تحديث حالة الحدث إلى مكتمل
@@ -284,5 +284,23 @@ export function processPaymentWebhook(
     };
   });
 
-  return processTx.immediate();
+  const res = processTx.immediate();
+
+  if (res.bookingUpdated && bookingReference) {
+    try {
+      const [pgBooking] = await client<[{ id: string }?]>`
+        SELECT id FROM bookings WHERE booking_reference = ${bookingReference} LIMIT 1
+      `;
+      if (pgBooking?.id) {
+        await transitionBookingStatus(pgBooking.id, "confirmed", {
+          role: "system",
+          reason: `PAYMENT_RECEIVED_VIA_${provider.toUpperCase()}_TX_${providerTransactionId}`,
+        });
+      }
+    } catch (err) {
+      console.warn("Could not sync pg booking status on webhook:", err);
+    }
+  }
+
+  return res;
 }

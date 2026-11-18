@@ -24,29 +24,22 @@ export default async function AccountPage() {
 
   const user = session.user;
 
-  // Count user bookings
-  let bookingsCount = 0;
-  try {
-    const [row] = await db
+  // Count user bookings and favorites in parallel
+  const [bookingsRes, favoritesRes] = await Promise.all([
+    db
       .select({ count: sql<number>`count(*)::int` })
       .from(schema.bookings)
-      .where(eq(schema.bookings.customerId, user.id));
-    bookingsCount = Number(row?.count) || 0;
-  } catch {
-    bookingsCount = 0;
-  }
-
-  // Count user favorites
-  let favoritesCount = 0;
-  try {
-    const [row] = await db
+      .where(eq(schema.bookings.customerId, user.id))
+      .catch(() => [{ count: 0 }]),
+    db
       .select({ count: sql<number>`count(*)::int` })
       .from(schema.favorites)
-      .where(eq(schema.favorites.userId, user.id));
-    favoritesCount = Number(row?.count) || 0;
-  } catch {
-    favoritesCount = 0;
-  }
+      .where(eq(schema.favorites.userId, user.id))
+      .catch(() => [{ count: 0 }]),
+  ]);
+
+  const bookingsCount = Number(bookingsRes[0]?.count) || 0;
+  const favoritesCount = Number(favoritesRes[0]?.count) || 0;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-4 py-6 pb-24">

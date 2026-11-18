@@ -36,8 +36,10 @@ async function getAllActiveVenues(): Promise<VenueItem[]> {
 }
 
 export default async function ExplorePage() {
-  const venues = await getAllActiveVenues();
-  const session = await getCurrentSession();
+  const [venues, session] = await Promise.all([
+    getAllActiveVenues(),
+    getCurrentSession(),
+  ]);
   const favoriteVenueIds = session?.user
     ? await getUserFavoriteIds(session.user.id)
     : [];

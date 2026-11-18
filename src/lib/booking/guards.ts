@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import { client } from "@/db";
 import type { Booking, VenueUnit } from "@/db/schema";
 import type { BookingStatus, TransitionActor } from "./types";
 
@@ -54,16 +54,13 @@ export function isBlockingStatus(status: BookingStatus): boolean {
 /**
  * استخراج وفحص الأقسام والوحدات النشطة للمنشأة مع منع الحجز لمنشأة فارغة
  */
-export function getActiveVenueUnits(
-  sqlite: Database.Database,
+export async function getActiveVenueUnits(
   venueId: string
-): VenueUnit[] {
-  const units = sqlite
-    .prepare(`
-      SELECT * FROM venue_units 
-      WHERE venue_id = ? AND is_active = 1 AND deleted_at IS NULL
-    `)
-    .all(venueId) as VenueUnit[];
+): Promise<VenueUnit[]> {
+  const units = await client<VenueUnit[]>`
+    SELECT * FROM venue_units 
+    WHERE venue_id = ${venueId} AND is_active = true AND deleted_at IS NULL
+  `;
 
   if (!units || units.length === 0) {
     throw new Error(
@@ -78,12 +75,11 @@ export function getActiveVenueUnits(
  * فحص الصلاحيات الإلزامية لانتقالات الحالة داخل الخادم
  * يتم فحص الصلاحية قبل فحص الـ Idempotency لضمان عدم تسريب معلومات لأي مستخدم غير مخول
  */
-export function assertCanTransitionBooking(
-  sqlite: Database.Database,
+export async function assertCanTransitionBooking(
   booking: Booking,
   targetStatus: BookingStatus,
   actor: TransitionActor
-): void {
+): Promise<void> {
   const rawRecord = booking as unknown as Record<string, unknown>;
   const venueId = (rawRecord.venue_id as string) || booking.venueId;
   const customerId = (rawRecord.customer_id as string) || booking.customerId;
@@ -124,12 +120,10 @@ export function assertCanTransitionBooking(
     }
 
     // التحقق من عضوية المالك وصلاحياته على المنشأة التابع لها الحجز
-    const member = sqlite
-      .prepare(`
-        SELECT role FROM venue_members 
-        WHERE venue_id = ? AND user_id = ?
-      `)
-      .get(venueId, actor.userId) as { role: string } | undefined;
+    const [member] = await client<{ role: string }[]>`
+      SELECT role FROM venue_members 
+      WHERE venue_id = ${venueId} AND user_id = ${actor.userId}
+    `;
 
     const allowedRoles = ["primary_owner", "co_owner", "manager"];
     if (!member || !allowedRoles.includes(member.role)) {

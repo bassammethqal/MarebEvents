@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import { client } from "@/db";
 import type { BookingShift, CurrencyType } from "./types";
 
 export interface ResolvedPriceItem {
@@ -22,8 +22,7 @@ export interface PricingCalculationResult {
 /**
  * حساب السعر الهرمي للوحدة أو المنشأة بالكامل وفق قواعد الأولوية الحتمية
  */
-export function calculateBookingPrice(
-  sqlite: Database.Database,
+export async function calculateBookingPrice(
   params: {
     venueId: string;
     isFullVenue: boolean;
@@ -32,7 +31,7 @@ export function calculateBookingPrice(
     shift: BookingShift;
     extraAmenityIds?: string[];
   }
-): PricingCalculationResult {
+): Promise<PricingCalculationResult> {
   const { venueId, isFullVenue, unitIds, eventDate, shift, extraAmenityIds = [] } = params;
 
   // استخراج يوم الأسبوع من التاريخ (0: الأحد .. 6: السبت)
@@ -40,9 +39,9 @@ export function calculateBookingPrice(
   const dayOfWeek = dateObj.getUTCDay();
 
   // جلب إعدادات العملة والعربون الافتراضي من المنشأة
-  const venueRow = sqlite
-    .prepare(`SELECT default_currency, default_deposit_percentage FROM venues WHERE id = ?`)
-    .get(venueId) as { default_currency: CurrencyType; default_deposit_percentage: number } | undefined;
+  const [venueRow] = await client<{ default_currency: CurrencyType; default_deposit_percentage: number }[]>`
+    SELECT default_currency, default_deposit_percentage FROM venues WHERE id = ${venueId}
+  `;
 
   if (!venueRow) {
     throw new Error(`VENUE_NOT_FOUND: Venue ${venueId} does not exist`);
@@ -55,7 +54,7 @@ export function calculateBookingPrice(
 
   if (isFullVenue) {
     // 1. حساب السعر الشامل لكامل المنشأة وفق سلم الأولويات
-    const fullVenuePrice = resolveTierPrice(sqlite, {
+    const fullVenuePrice = await resolveTierPrice({
       venueId,
       unitId: null,
       eventDate,
@@ -78,12 +77,12 @@ export function calculateBookingPrice(
   } else {
     // 2. حساب السعر لكل قسم/وحدة مطلوبة
     for (const unitId of unitIds) {
-      const unitRow = sqlite
-        .prepare(`SELECT name FROM venue_units WHERE id = ?`)
-        .get(unitId) as { name: string } | undefined;
+      const [unitRow] = await client<{ name: string }[]>`
+        SELECT name FROM venue_units WHERE id = ${unitId}
+      `;
 
       const unitName = unitRow?.name || `قسم ${unitId}`;
-      const unitPrice = resolveTierPrice(sqlite, {
+      const unitPrice = await resolveTierPrice({
         venueId,
         unitId,
         eventDate,
@@ -109,20 +108,17 @@ export function calculateBookingPrice(
 
   // 3. إضافة الخدمات والمرافق الإضافية المطلوبة
   if (extraAmenityIds.length > 0) {
-    const placeholders = extraAmenityIds.map(() => "?").join(",");
-    const extraRows = sqlite
-      .prepare(`
-        SELECT va.amenity_id, va.additional_price, va.is_free, a.name_ar 
-        FROM venue_amenities va
-        JOIN amenities a ON a.id = va.amenity_id
-        WHERE va.venue_id = ? AND va.amenity_id IN (${placeholders})
-      `)
-      .all(venueId, ...extraAmenityIds) as Array<{
-        amenity_id: string;
-        additional_price: number;
-        is_free: number;
-        name_ar: string;
-      }>;
+    const extraRows = await client<Array<{
+      amenity_id: string;
+      additional_price: number;
+      is_free: boolean;
+      name_ar: string;
+    }>>`
+      SELECT va.amenity_id, va.additional_price, va.is_free, a.name_ar 
+      FROM venue_amenities va
+      JOIN amenities a ON a.id = va.amenity_id
+      WHERE va.venue_id = ${venueId} AND va.amenity_id = ANY(${extraAmenityIds})
+    `;
 
     for (const extra of extraRows) {
       const price = extra.is_free ? 0 : (extra.additional_price || 0);
@@ -152,12 +148,11 @@ export function calculateBookingPrice(
 /**
  * حل السعر وفق الأولويات الأربع الحتمية:
  * 1. استثناء تاريخ مخصص (custom_price)
- * 2. سعر موسمي (is_seasonal = 1)
+ * 2. سعر موسمي (is_seasonal = true)
  * 3. سعر يوم أسبوع (day_of_week)
  * 4. سعر عام افتراضي (day_of_week IS NULL)
  */
-function resolveTierPrice(
-  sqlite: Database.Database,
+async function resolveTierPrice(
   params: {
     venueId: string;
     unitId: string | null;
@@ -165,76 +160,81 @@ function resolveTierPrice(
     shift: BookingShift;
     dayOfWeek: number;
   }
-): number | null {
+): Promise<number | null> {
   const { venueId, unitId, eventDate, shift, dayOfWeek } = params;
 
   // 1. استثناء إتاحة وسعر مخصص (venue_availability)
-  const overrideRow = sqlite
-    .prepare(`
-      SELECT custom_price FROM venue_availability
-      WHERE venue_id = :venueId 
-        AND (:unitId IS NULL AND unit_id IS NULL OR unit_id = :unitId)
-        AND override_date = :eventDate
-        AND shift = :shift
-        AND custom_price IS NOT NULL
-      LIMIT 1
-    `)
-    .get({ venueId, unitId, eventDate, shift }) as { custom_price: number } | undefined;
+  const [overrideRow] = await client<{ custom_price: number }[]>`
+    SELECT custom_price FROM venue_availability
+    WHERE venue_id = ${venueId} 
+      AND (${unitId}::text IS NULL AND unit_id IS NULL OR unit_id = ${unitId})
+      AND override_date = ${eventDate}
+      AND shift = ${shift}
+      AND custom_price IS NOT NULL
+    LIMIT 1
+  `;
 
   if (overrideRow && overrideRow.custom_price !== null) {
-    return overrideRow.custom_price;
+    return Number(overrideRow.custom_price);
   }
 
-  // 2. سعر موسمي (pricing_tiers مع is_seasonal = 1)
-  const seasonalRow = sqlite
-    .prepare(`
-      SELECT price FROM pricing_tiers
-      WHERE venue_id = :venueId
-        AND (:unitId IS NULL AND unit_id IS NULL OR unit_id = :unitId)
-        AND shift = :shift
-        AND is_seasonal = 1
-        AND :eventDate >= season_start
-        AND :eventDate <= season_end
-      LIMIT 1
-    `)
-    .get({ venueId, unitId, eventDate, shift }) as { price: number } | undefined;
+  // 2. سعر موسمي (pricing_tiers مع is_seasonal = true)
+  const [seasonalRow] = await client<{ price: number }[]>`
+    SELECT price FROM pricing_tiers
+    WHERE venue_id = ${venueId}
+      AND (${unitId}::text IS NULL AND unit_id IS NULL OR unit_id = ${unitId})
+      AND shift = ${shift}
+      AND is_seasonal = true
+      AND ${eventDate} >= season_start
+      AND ${eventDate} <= season_end
+    LIMIT 1
+  `;
 
   if (seasonalRow && seasonalRow.price !== null) {
-    return seasonalRow.price;
+    return Number(seasonalRow.price);
   }
 
   // 3. سعر يوم محدد من الأسبوع (pricing_tiers مع day_of_week)
-  const dowRow = sqlite
-    .prepare(`
-      SELECT price FROM pricing_tiers
-      WHERE venue_id = :venueId
-        AND (:unitId IS NULL AND unit_id IS NULL OR unit_id = :unitId)
-        AND shift = :shift
-        AND is_seasonal = 0
-        AND day_of_week = :dayOfWeek
-      LIMIT 1
-    `)
-    .get({ venueId, unitId, shift, dayOfWeek }) as { price: number } | undefined;
+  const [dowRow] = await client<{ price: number }[]>`
+    SELECT price FROM pricing_tiers
+    WHERE venue_id = ${venueId}
+      AND (${unitId}::text IS NULL AND unit_id IS NULL OR unit_id = ${unitId})
+      AND shift = ${shift}
+      AND is_seasonal = false
+      AND day_of_week = ${dayOfWeek}
+    LIMIT 1
+  `;
 
   if (dowRow && dowRow.price !== null) {
-    return dowRow.price;
+    return Number(dowRow.price);
   }
 
   // 4. سعر عام افتراضي للفترة (pricing_tiers مع day_of_week IS NULL)
-  const defaultRow = sqlite
-    .prepare(`
-      SELECT price FROM pricing_tiers
-      WHERE venue_id = :venueId
-        AND (:unitId IS NULL AND unit_id IS NULL OR unit_id = :unitId)
-        AND shift = :shift
-        AND is_seasonal = 0
-        AND day_of_week IS NULL
-      LIMIT 1
-    `)
-    .get({ venueId, unitId, shift }) as { price: number } | undefined;
+  const [defaultRow] = await client<{ price: number }[]>`
+    SELECT price FROM pricing_tiers
+    WHERE venue_id = ${venueId}
+      AND (${unitId}::text IS NULL AND unit_id IS NULL OR unit_id = ${unitId})
+      AND shift = ${shift}
+      AND is_seasonal = false
+      AND day_of_week IS NULL
+    LIMIT 1
+  `;
 
   if (defaultRow && defaultRow.price !== null) {
-    return defaultRow.price;
+    return Number(defaultRow.price);
+  }
+
+  // 5. في حال عدم وجود تسعيرة مطابقة تماماً للوحدة، جلب التسعيرة الافتراضية للمنشأة
+  const [fallbackRow] = await client<{ price: number }[]>`
+    SELECT price FROM pricing_tiers
+    WHERE venue_id = ${venueId}
+      AND shift = ${shift}
+    ORDER BY is_default DESC
+    LIMIT 1
+  `;
+
+  if (fallbackRow && fallbackRow.price !== null) {
+    return Number(fallbackRow.price);
   }
 
   return null;

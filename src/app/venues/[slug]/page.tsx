@@ -79,24 +79,23 @@ async function getVenueBySlug(slug: string) {
 
     if (!venue) return null;
 
-    const images = await client<ImageRow[]>`
-      SELECT id, image_url, is_cover FROM venue_images WHERE venue_id = ${venue.id} ORDER BY is_cover DESC
-    `;
-
-    const units = await client<UnitRow[]>`
-      SELECT id, name, unit_type, capacity_max FROM venue_units WHERE venue_id = ${venue.id} AND is_active = true
-    `;
-
-    const pricing = await client<PricingRow[]>`
-      SELECT shift, price, currency FROM pricing_tiers WHERE venue_id = ${venue.id}
-    `;
-
-    const amenities = await client<AmenityRow[]>`
-      SELECT a.id, a.name_ar 
-      FROM venue_amenities va
-      JOIN amenities a ON a.id = va.amenity_id
-      WHERE va.venue_id = ${venue.id}
-    `;
+    const [images, units, pricing, amenities] = await Promise.all([
+      client<ImageRow[]>`
+        SELECT id, image_url, is_cover FROM venue_images WHERE venue_id = ${venue.id} ORDER BY is_cover DESC
+      `,
+      client<UnitRow[]>`
+        SELECT id, name, unit_type, capacity_max FROM venue_units WHERE venue_id = ${venue.id} AND is_active = true
+      `,
+      client<PricingRow[]>`
+        SELECT shift, price, currency FROM pricing_tiers WHERE venue_id = ${venue.id}
+      `,
+      client<AmenityRow[]>`
+        SELECT a.id, a.name_ar 
+        FROM venue_amenities va
+        JOIN amenities a ON a.id = va.amenity_id
+        WHERE va.venue_id = ${venue.id}
+      `,
+    ]);
 
     return {
       venue,
@@ -117,14 +116,16 @@ export default async function VenueDetailsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const data = await getVenueBySlug(slug);
+  const [data, session] = await Promise.all([
+    getVenueBySlug(slug),
+    getCurrentSession(),
+  ]);
 
   if (!data) {
     notFound();
   }
 
   const { venue, images, units, pricing, amenities } = data;
-  const session = await getCurrentSession();
   const isAuthenticated = !!session?.user;
 
   // Check if venue is favorited by current user

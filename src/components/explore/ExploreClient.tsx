@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { FavoriteButton } from "@/components/ui/FavoriteButton";
 import { Pin3D } from "@/components/ui/Icons3D";
+import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import type { VenueItem } from "@/components/home/VenueFeedWithFilter";
 
 interface ExploreClientProps {
@@ -221,7 +222,7 @@ export function ExploreClient({ venues, favoriteVenueIds }: ExploreClientProps) 
             </button>
           </div>
         ) : (
-          filteredAndSortedVenues.map((venue) => {
+          filteredAndSortedVenues.map((venue, index) => {
             const displayPrice = venue.starting_price
               ? `${venue.starting_price.toLocaleString("ar-YE")} ${venue.default_currency}`
               : "حسب الفترة";
@@ -229,81 +230,82 @@ export function ExploreClient({ venues, favoriteVenueIds }: ExploreClientProps) 
             const isFavorited = favoriteVenueIds.includes(venue.id);
 
             return (
-              <div
-                key={venue.id}
-                className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition duration-200 group"
-              >
-                {/* Image Container with Badge & Heart */}
-                <div className="relative h-44 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                  <Link href={`/venues/${venue.slug}`} className="block w-full h-full">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={
-                        venue.cover_image ||
-                        "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80"
-                      }
-                      alt={venue.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                    />
-                  </Link>
+              <ScrollReveal key={venue.id} delayMs={(index % 4) * 70}>
+                <div
+                  className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition duration-200 group"
+                >
+                  {/* Image Container with Badge & Heart */}
+                  <div className="relative h-44 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <Link href={`/venues/${venue.slug}`} className="block w-full h-full">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={
+                          venue.cover_image ||
+                          "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80"
+                        }
+                        alt={venue.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                      />
+                    </Link>
 
-                  {/* Top Right: Category Badge */}
-                  <div className="absolute top-3 right-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm text-slate-800 dark:text-slate-100 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-500" />
-                    <span>{venue.category_name || "تأكيد فوري"}</span>
-                  </div>
-
-                  {/* Top Left: Heart Button */}
-                  <div className="absolute top-3 left-3">
-                    <FavoriteButton
-                      venueId={venue.id}
-                      initialFavorited={isFavorited}
-                    />
-                  </div>
-                </div>
-
-                {/* Card Content */}
-                <div className="p-4 text-right">
-                  <Link href={`/venues/${venue.slug}`}>
-                    <h3 className="font-bold text-base text-slate-900 dark:text-white leading-snug hover:text-amber-600 transition">
-                      {venue.name}
-                    </h3>
-                  </Link>
-
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">
-                    <Pin3D className="w-4 h-4 shrink-0" />
-                    <span>
-                      {venue.city} - {venue.district}
-                    </span>
-                    {venue.max_capacity && (
-                      <>
-                        <span className="text-slate-300 dark:text-slate-700">•</span>
-                        <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>حتى {venue.max_capacity} ضيف</span>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Price & Booking Button */}
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <div>
-                      <div className="text-[11px] text-slate-400 font-medium">
-                        ابتداءً من:
-                      </div>
-                      <div className="text-sm font-black text-amber-600 dark:text-amber-400">
-                        {displayPrice}
-                      </div>
+                    {/* Top Right: Category Badge */}
+                    <div className="absolute top-3 right-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm text-slate-800 dark:text-slate-100 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-amber-500" />
+                      <span>{venue.category_name || "تأكيد فوري"}</span>
                     </div>
 
-                    <Link
-                      href={`/venues/${venue.slug}`}
-                      className="bg-slate-900 dark:bg-amber-500 hover:bg-slate-800 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs active:scale-95"
-                    >
-                      احجز الآن
+                    {/* Top Left: Heart Button */}
+                    <div className="absolute top-3 left-3">
+                      <FavoriteButton
+                        venueId={venue.id}
+                        initialFavorited={isFavorited}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="p-4 text-right">
+                    <Link href={`/venues/${venue.slug}`}>
+                      <h3 className="font-bold text-base text-slate-900 dark:text-white leading-snug hover:text-amber-600 transition">
+                        {venue.name}
+                      </h3>
                     </Link>
+
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">
+                      <Pin3D className="w-4 h-4 shrink-0" />
+                      <span>
+                        {venue.city} - {venue.district}
+                      </span>
+                      {venue.max_capacity && (
+                        <>
+                          <span className="text-slate-300 dark:text-slate-700">•</span>
+                          <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>حتى {venue.max_capacity} ضيف</span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Price & Booking Button */}
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div>
+                        <div className="text-[11px] text-slate-400 font-medium">
+                          ابتداءً من:
+                        </div>
+                        <div className="text-sm font-black text-amber-600 dark:text-amber-400">
+                          {displayPrice}
+                        </div>
+                      </div>
+
+                      <Link
+                        href={`/venues/${venue.slug}`}
+                        className="bg-slate-900 dark:bg-amber-500 hover:bg-slate-800 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs active:scale-95"
+                      >
+                        احجز الآن
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </ScrollReveal>
             );
           })
         )}
