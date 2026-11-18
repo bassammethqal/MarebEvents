@@ -54,8 +54,6 @@ if (process.env.NODE_ENV !== "production") {
   globalForDb.db = db;
 }
 
-// تصدير SQLite للتوافق مع السكربتات المرجعية القديمة
-import Database from "better-sqlite3";
-export const sqlite = new Database("data/mareb_events.db");
+export const sqlite: any = null;
 
 export { schema };
