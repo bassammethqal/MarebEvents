@@ -122,9 +122,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
       {/* Decorative Background Elements */}
-      <div className="pointer-events-none fixed -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[120px]" />
-      <div className="pointer-events-none fixed top-1/2 -left-40 h-[600px] w-[600px] rounded-full bg-emerald-500/5 blur-[150px]" />
-      <div className="pointer-events-none fixed -bottom-40 right-1/3 h-[500px] w-[500px] rounded-full bg-amber-600/5 blur-[140px]" />
+      <div className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[120px]" />
+      <div className="pointer-events-none absolute top-1/2 -left-40 h-[600px] w-[600px] rounded-full bg-emerald-500/5 blur-[150px]" />
+      <div className="pointer-events-none absolute -bottom-40 right-1/3 h-[500px] w-[500px] rounded-full bg-amber-600/5 blur-[140px]" />
 
       {/* Top Banner Notice */}
       <div className="relative z-20 bg-gradient-to-r from-amber-950/80 via-amber-900/60 to-slate-950 border-b border-amber-500/20 py-2 text-center text-xs text-amber-200 px-4 flex items-center justify-center gap-2">
@@ -154,8 +154,8 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-bold text-slate-300">
+          {/* Navigation Links - Mobile Native Clean Header */}
+          <nav className="hidden items-center gap-6 text-sm font-bold text-slate-300">
             <Link href="/" className="text-amber-400 transition">
               الرئيسية
             </Link>
@@ -207,8 +207,8 @@ export default function HomePage() {
         </p>
 
         {/* Search & Filter Component */}
-        <div className="w-full max-w-4xl bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-2xl shadow-black/60 backdrop-blur-xl text-right">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div className="w-full bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 shadow-2xl shadow-black/60 backdrop-blur-xl text-right">
+          <div className="grid grid-cols-1 gap-2.5 mb-4">
             {/* Category Select */}
             <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
               <label className="text-[11px] font-bold text-slate-400 block mb-1">نوع المنشأة</label>
@@ -273,7 +273,7 @@ export default function HomePage() {
         </div>
 
         {/* Trust Badges */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl mt-12 text-right">
+        <div className="grid grid-cols-2 gap-3 w-full mt-8 text-right">
           <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
               <ShieldCheck className="h-5 w-5" />
@@ -340,7 +340,7 @@ export default function HomePage() {
             <p className="text-sm text-slate-400">سيتم إضافة منشآت جديدة قريباً.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {venues.map((venue) => (
               <div
                 key={venue.id}
@@ -467,7 +467,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-right">
+          <div className="grid grid-cols-1 gap-4 text-right">
             {/* Step 1 */}
             <div className="relative bg-slate-950/80 border border-slate-800 rounded-3xl p-6">
               <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center font-black text-xl text-amber-400 mb-5">
@@ -612,7 +612,7 @@ export default function HomePage() {
 
       {/* Modern Comprehensive Footer */}
       <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950 pt-12 pb-8 px-4 sm:px-6 mt-auto">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10 text-right">
+        <div className="w-full grid grid-cols-1 gap-6 mb-8 text-right">
           {/* Brand Info */}
           <div>
             <div className="flex items-center gap-2.5 mb-3">

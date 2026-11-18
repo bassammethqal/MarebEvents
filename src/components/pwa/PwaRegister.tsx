@@ -104,7 +104,7 @@ export function PwaRegister() {
   return (
     <>
       {/* Floating Mobile Install Pill / Banner */}
-      <div className="fixed bottom-20 left-4 right-4 z-50 md:hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full max-w-[430px] px-4 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="bg-slate-900/95 backdrop-blur-xl border border-amber-500/30 rounded-2xl p-3.5 shadow-2xl shadow-amber-500/10 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center p-1 shadow-md shadow-amber-500/20 shrink-0 relative">

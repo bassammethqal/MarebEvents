@@ -48,9 +48,9 @@ export function BottomNav() {
   return (
     <nav
       aria-label="التنقل السفلي للتطبيق"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800/80 md:hidden transition-all duration-300 pb-[env(safe-area-inset-bottom,8px)]"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-40 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/80 transition-all duration-300 pb-[env(safe-area-inset-bottom,8px)]"
     >
-      <div className="grid grid-cols-5 h-16 max-w-md mx-auto items-center px-1">
+      <div className="grid grid-cols-5 h-16 w-full items-center px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (

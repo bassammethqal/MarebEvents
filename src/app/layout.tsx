@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { PwaRegister } from "@/components/pwa/PwaRegister";
-import { BottomNav } from "@/components/pwa/BottomNav";
+import { AppShell } from "@/components/shell/AppShell";
 
 const thmanyah = localFont({
   src: [
@@ -78,10 +77,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" className={thmanyah.variable}>
-      <body className="min-h-screen bg-slate-950 font-sans text-slate-100 antialiased selection:bg-amber-500/20 selection:text-amber-300">
-        <PwaRegister />
-        <div className="pb-16 md:pb-0 min-h-screen flex flex-col">{children}</div>
-        <BottomNav />
+      <body className="min-h-screen bg-[#060913] font-sans text-slate-100 antialiased">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
