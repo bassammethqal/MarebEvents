@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @font-face {
   font-family: "Thmanyah Sans";
   src: url("/fonts/thmanyahsans-Regular.woff2") format("woff2");

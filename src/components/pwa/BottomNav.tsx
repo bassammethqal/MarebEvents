@@ -21,9 +21,9 @@ export function BottomNav() {
     },
     {
       name: "اكتشف",
-      href: "/#venues",
+      href: "/explore",
       icon: Compass,
-      isActive: pathname.startsWith("/venues") || pathname.startsWith("/categories"),
+      isActive: pathname.startsWith("/explore") || pathname.startsWith("/venues") || pathname.startsWith("/categories"),
     },
     {
       name: "حجوزاتي",

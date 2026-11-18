@@ -14,15 +14,9 @@ export function ThemeToggle() {
 
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === "undefined") return false;
-    const saved = localStorage.getItem("theme");
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const active = saved === "dark" || (!saved && systemPrefersDark);
-    if (active) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    return active;
+    const hasDarkClass = document.documentElement.classList.contains("dark");
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme === "dark" || hasDarkClass;
   });
 
   const toggleTheme = () => {
@@ -54,10 +48,10 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       aria-label={isDark ? "تفعيل الوضع النهاري" : "تفعيل الوضع الليلي"}
-      className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-2xs active:scale-95"
+      className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-amber-400 hover:bg-slate-50 dark:hover:bg-slate-700/80 transition shadow-2xs active:scale-95 cursor-pointer"
     >
       {isDark ? (
-        <Sun className="w-4 h-4 text-amber-500 transition duration-200" />
+        <Sun className="w-4 h-4 text-amber-400 transition duration-200" />
       ) : (
         <Moon className="w-4 h-4 text-slate-700 transition duration-200" />
       )}

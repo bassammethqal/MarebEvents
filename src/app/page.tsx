@@ -162,13 +162,13 @@ export default async function HomePage() {
             <p className="text-xs text-slate-300 leading-relaxed mb-5 max-w-[260px] font-normal">
               اكتشف أرقى قاعات الأفراح والشاليهات في مأرب واحجز موعدك بسهولة وبضمان ذري.
             </p>
-            <a
-              href="#venues"
+            <Link
+              href="/explore"
               className="inline-flex items-center gap-2 bg-white text-slate-900 font-bold text-xs px-5 py-2.5 rounded-full shadow-sm hover:bg-amber-50 transition active:scale-95 cursor-pointer"
             >
               <span>استكشف القاعات</span>
               <span>←</span>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

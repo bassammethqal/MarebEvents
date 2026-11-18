@@ -76,8 +76,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={thmanyah.variable}>
-      <body className="min-h-screen bg-[#EEF2F6] font-sans text-slate-900 antialiased">
+    <html lang="ar" dir="rtl" className={thmanyah.variable} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="min-h-screen bg-[#EEF2F6] dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 antialiased selection:bg-amber-500/20 selection:text-amber-800">
         <AppShell>{children}</AppShell>
       </body>
     </html>
