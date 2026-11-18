@@ -79,30 +79,13 @@ async function AuthHeader() {
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             {user.fullName}
           </div>
-          <div className="text-[10px] text-amber-400 font-medium">
-            {user.role === "admin"
-              ? "مدير المنصة"
-              : user.role === "owner"
-              ? "مالك منشأة"
-              : "عميل معتمد"}
-          </div>
+          <Link
+            href="/my-bookings"
+            className="text-[10px] text-amber-400 hover:text-amber-300 font-medium block"
+          >
+            حجوزاتي ومواعيدي
+          </Link>
         </div>
-        {user.role === "admin" && (
-          <Link
-            href="/admin"
-            className="text-[11px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-lg transition font-medium"
-          >
-            لوحة الإدارة
-          </Link>
-        )}
-        {user.role === "owner" && (
-          <Link
-            href="/owner"
-            className="text-[11px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-lg transition font-medium"
-          >
-            إدارة منشآتي
-          </Link>
-        )}
         <form action={logoutAction}>
           <button
             type="submit"
@@ -551,8 +534,8 @@ export default function HomePage() {
                   <CheckCircle2 className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">أسعار شفافة ومباشرة من المالك</h4>
-                  <p className="text-xs text-slate-400 font-normal">لا توجد رسوم خفية أو وسطاء؛ الأسعار مطابقة لما يُقدمه المالك تماماً بالريال اليمني أو السعودي.</p>
+                  <h4 className="text-sm font-bold text-white">أسعار شفافة ومباشرة</h4>
+                  <p className="text-xs text-slate-400 font-normal">لا توجد رسوم خفية أو وسطاء؛ الأسعار مطابقة ومعتمدة بالكامل بالريال اليمني أو السعودي.</p>
                 </div>
               </div>
 
@@ -597,25 +580,33 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Owner CTA Section */}
+      {/* Customer CTA Section */}
       <section className="relative z-10 py-14 px-4 sm:px-6 max-w-5xl mx-auto w-full">
         <div className="bg-gradient-to-r from-amber-950/70 via-slate-900 to-amber-900/40 border border-amber-500/30 rounded-3xl p-8 sm:p-10 text-center flex flex-col items-center">
           <div className="h-12 w-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
-            <Building2 className="h-6 w-6" />
+            <Sparkles className="h-6 w-6" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
-            هل تمتلك قاعة أفراح أو شاليهاً في محافظة مأرب؟
+            جاهز لتنظيم مناسبتك القادمة في مأرب؟
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl mb-6 font-normal">
-            انضم إلى منصة مأرب إيفنتس، وأدر حجوزاتك إلكترونياً ومكتبياً بكل سهولة، واستقبل طلبات حجوزات مؤكدة من آلاف العملاء.
+            استكشف أرقى قاعات الأفراح والشاليهات والاستراحات، وتحقق من المواعيد الشاغرة واحجز بضمان فوري يمنع أي تعارض زمني.
           </p>
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-6 py-3 rounded-xl transition text-sm shadow-lg shadow-amber-500/25"
-          >
-            <span>سجّل منشأتك كمالك الآن</span>
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="#featured-venues"
+              className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-6 py-3 rounded-xl transition text-sm shadow-lg shadow-amber-500/25"
+            >
+              <span>استكشف القاعات المتاحة</span>
+              <ArrowLeft className="h-4 w-4" />
+            </a>
+            <Link
+              href="/my-bookings"
+              className="inline-flex items-center gap-2 bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white font-bold px-5 py-3 rounded-xl border border-slate-700/80 transition text-sm"
+            >
+              <span>متابعة حجوزاتي</span>
+            </Link>
+          </div>
         </div>
       </section>
 

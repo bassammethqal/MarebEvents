@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Heart, ArrowLeft, Building2 } from "lucide-react";
+import { Heart, ArrowLeft } from "lucide-react";
 
 export const instant = false;
 

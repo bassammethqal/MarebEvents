@@ -9,7 +9,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<"customer" | "owner">("customer");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -17,7 +16,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    formData.set("role", role);
+    formData.set("role", "customer");
 
     const result = await registerAction(formData);
 
@@ -41,8 +40,8 @@ export default function RegisterPage() {
             <div className="h-12 w-12 mx-auto rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center font-black text-slate-950 text-2xl shadow-lg shadow-amber-500/20 mb-3">
               M
             </div>
-            <h1 className="text-2xl font-bold text-white">إنشاء حساب جديد</h1>
-            <p className="text-xs text-slate-400 mt-1">انضم إلى منصة مأرب إيفنتس لحجز القاعات والاستراحات</p>
+            <h1 className="text-2xl font-bold text-white">إنشاء حساب زبون جديد</h1>
+            <p className="text-xs text-slate-400 mt-1">انضم إلى منصة فعاليات مأرب لحجز قاعات الأفراح والمناسبات</p>
           </Link>
         </div>
 
@@ -55,55 +54,26 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              نوع الحساب
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setRole("customer")}
-                className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
-                  role === "customer"
-                    ? "bg-amber-400 text-slate-950 border-amber-400"
-                    : "bg-slate-950/40 border-slate-800 text-slate-400 hover:text-white"
-                }`}
-              >
-                عميل (حجز مناسبات)
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole("owner")}
-                className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
-                  role === "owner"
-                    ? "bg-amber-400 text-slate-950 border-amber-400"
-                    : "bg-slate-950/40 border-slate-800 text-slate-400 hover:text-white"
-                }`}
-              >
-                مالك قاعة / استراحة
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
               الاسم الكامل
             </label>
             <input
               type="text"
               name="fullName"
               required
-              placeholder="مثال: محمد بن علي العرادة"
+              placeholder="مثال: محمد علي العرادة"
               className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 transition"
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              البريد الإلكتروني (اختياري إذا تم إدخال الهاتف)
+              رقم الهاتف (للتواصل وتأكيد الحجز)
             </label>
             <input
-              type="email"
-              name="email"
-              placeholder="name@example.com"
+              type="tel"
+              name="phone"
+              required
+              placeholder="770000000"
               className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 transition"
               dir="ltr"
             />
@@ -111,12 +81,12 @@ export default function RegisterPage() {
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              رقم الهاتف (اختياري إذا تم إدخال البريد)
+              البريد الإلكتروني (اختياري)
             </label>
             <input
-              type="tel"
-              name="phone"
-              placeholder="770000000"
+              type="email"
+              name="email"
+              placeholder="name@example.com"
               className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 transition"
               dir="ltr"
             />
@@ -142,7 +112,7 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full py-3 mt-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm shadow-lg shadow-amber-400/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "جاري الإنشاء..." : "إنشاء الحساب"}
+            {loading ? "جاري إنشاء الحساب..." : "إنشاء حساب زبون"}
           </button>
         </form>
 

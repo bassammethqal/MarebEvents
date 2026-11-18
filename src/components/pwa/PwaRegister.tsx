@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -9,8 +10,21 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function PwaRegister() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(() => {
+    if (typeof window !== "undefined") {
+      return (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true
+      );
+    }
+    return false;
+  });
+  const [isIOS] = useState(() => {
+    if (typeof window !== "undefined") {
+      return /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    }
+    return false;
+  });
   const [showBanner, setShowBanner] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
 
@@ -23,20 +37,9 @@ export function PwaRegister() {
         .catch((err) => console.warn("PWA: SW registration error:", err));
     }
 
-    // 2. Check if already running standalone (already installed)
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-
-    if (isStandalone) {
-      setIsInstalled(true);
+    if (isInstalled) {
       return;
     }
-
-    // 3. Detect iOS device
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
-    setIsIOS(isIosDevice);
 
     // Check if dismissed before
     const isDismissed = localStorage.getItem("mareb_pwa_dismissed");
@@ -44,7 +47,7 @@ export function PwaRegister() {
       return;
     }
 
-    // 4. Capture Android/Desktop Chrome beforeinstallprompt
+    // Capture Android/Desktop Chrome beforeinstallprompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -54,21 +57,24 @@ export function PwaRegister() {
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
     // If iOS and not dismissed, show banner after brief delay
-    if (isIosDevice) {
+    if (isIOS) {
       const timer = setTimeout(() => setShowBanner(true), 2500);
       return () => clearTimeout(timer);
     }
 
-    window.addEventListener("appinstalled", () => {
+    const handleAppInstalled = () => {
       setIsInstalled(true);
       setShowBanner(false);
       setDeferredPrompt(null);
-    });
+    };
+
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
-  }, []);
+  }, [isInstalled, isIOS]);
 
   const handleInstallClick = async () => {
     if (isIOS) {
@@ -101,10 +107,12 @@ export function PwaRegister() {
       <div className="fixed bottom-20 left-4 right-4 z-50 md:hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="bg-slate-900/95 backdrop-blur-xl border border-amber-500/30 rounded-2xl p-3.5 shadow-2xl shadow-amber-500/10 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center p-1 shadow-md shadow-amber-500/20 shrink-0">
-              <img
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center p-1 shadow-md shadow-amber-500/20 shrink-0 relative">
+              <Image
                 src="/icons/icon-192x192.png"
                 alt="فعاليات مأرب"
+                width={44}
+                height={44}
                 className="h-full w-full object-contain rounded-lg"
               />
             </div>

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
 import { sqlite } from "@/db";
-import { CalendarCheck, Clock, MapPin, AlertCircle, ArrowLeft, Building2 } from "lucide-react";
+import { CalendarCheck, MapPin, ArrowLeft, Building2 } from "lucide-react";
 
 export const instant = false;
 
