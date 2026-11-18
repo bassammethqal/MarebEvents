@@ -68,9 +68,11 @@ export async function registerUser(
     throw new Error("كلمة المرور يجب أن تتكون من 8 خانات على الأقل.");
   }
 
-  // منع محاولة التسجيل بدور مدير نظام (Admin) من الواجهة العامة
-  const allowedRole: "customer" | "owner" =
-    input.role === "owner" ? "owner" : "customer";
+  // منع محاولة التسجيل بدور مالك أو مدير نظام من الواجهة العامة
+  if (input.role && input.role !== "customer") {
+    throw new Error("حسابات أصحاب القاعات والاستراحات تُنشأ وتُعتمد حصرياً عبر إدارة المنصة.");
+  }
+  const allowedRole: "customer" = "customer";
 
   // 1. التحقق من عدم تكرار البريد الإلكتروني
   if (email) {

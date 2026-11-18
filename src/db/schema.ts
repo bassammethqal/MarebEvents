@@ -28,6 +28,7 @@ export const users = pgTable(
     isActive: boolean("is_active").notNull().default(true),
     failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
     lockoutUntil: text("lockout_until"),
+    mustChangePassword: boolean("must_change_password").notNull().default(false),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },
