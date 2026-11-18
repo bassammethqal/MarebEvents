@@ -13,9 +13,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#060913] text-slate-100 flex justify-center selection:bg-amber-500/20 selection:text-amber-300">
+    <div className="min-h-screen w-full bg-[#EEF2F6] flex justify-center selection:bg-amber-500/20 selection:text-amber-800">
       <PwaRegister />
-      <div className="w-full max-w-[430px] mx-auto min-h-screen bg-slate-950 border-x border-slate-800/80 shadow-2xl relative pb-20 flex flex-col overflow-x-hidden">
+      <div className="w-full max-w-[430px] mx-auto min-h-screen bg-[#F8FAFC] text-slate-900 shadow-[0_0_50px_rgba(15,23,42,0.08)] relative pb-24 overflow-x-hidden flex flex-col">
         {children}
         <BottomNav />
       </div>

@@ -31,7 +31,7 @@ const thmanyah = localFont({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#020617",
+  themeColor: "#FFFFFF",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "فعاليات مأرب",
   },
   icons: {
@@ -77,7 +77,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" className={thmanyah.variable}>
-      <body className="min-h-screen bg-[#060913] font-sans text-slate-100 antialiased">
+      <body className="min-h-screen bg-[#EEF2F6] font-sans text-slate-900 antialiased">
         <AppShell>{children}</AppShell>
       </body>
     </html>
