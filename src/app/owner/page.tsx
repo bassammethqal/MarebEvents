@@ -3,6 +3,7 @@ import { client } from "@/db";
 import { logoutAction } from "@/lib/auth/actions";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { PendingBookingsList, PendingBookingItem } from "@/components/owner/PendingBookingsList";
+import { OwnerOnboardingCard } from "@/components/owner/OwnerOnboardingCard";
 import Link from "next/link";
 import {
   Building2,
@@ -51,7 +52,13 @@ interface RawVenueRow {
 export default async function OwnerDashboardPage() {
   const { user } = await requireOwnerOrAdmin();
 
-  // 1. استخراج معرفات المنشآت الخاصة بهذا المالك
+  // 1. جلب التصنيفات
+  const rawCategories = await client<[{ id: string; name_ar: string }]>`
+    SELECT id, name_ar FROM venue_categories ORDER BY display_order ASC
+  `;
+  const categories = rawCategories.map((c) => ({ id: c.id, nameAr: c.name_ar }));
+
+  // 2. استخراج معرفات المنشآت الخاصة بهذا المالك
   let venues: RawVenueRow[] = [];
   if (user.role === "admin") {
     venues = await client<RawVenueRow[]>`
@@ -277,9 +284,7 @@ export default async function OwnerDashboardPage() {
         </div>
 
         {venues.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 rounded-3xl p-5 text-center text-xs text-slate-500">
-            لا توجد منشآت مرتبطة بحسابك حالياً. يرجى مراجعة إدارة المنصة لربط قاعتك أو استراحتك.
-          </div>
+          <OwnerOnboardingCard categories={categories} />
         ) : (
           <div className="space-y-2">
             {venues.map((v) => (

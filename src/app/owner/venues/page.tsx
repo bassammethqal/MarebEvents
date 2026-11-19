@@ -22,8 +22,19 @@ interface RawTierRow {
   price: number;
 }
 
+interface RawCategoryRow {
+  id: string;
+  name_ar: string;
+}
+
 export default async function OwnerVenuesPage() {
   const { user } = await requireOwnerOrAdmin();
+
+  // جلب التصنيفات
+  const rawCategories = await client<RawCategoryRow[]>`
+    SELECT id, name_ar FROM venue_categories ORDER BY display_order ASC
+  `;
+  const categories = rawCategories.map((c) => ({ id: c.id, nameAr: c.name_ar }));
 
   // جلب المنشآت مع السعة القصوى
   let rawVenues: RawVenueRow[] = [];
@@ -100,19 +111,13 @@ export default async function OwnerVenuesPage() {
               إدارة المنشآت
             </h1>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              تعديل السعة والأسعار وتفعيل أو إيقاف الحجوزات
+              إضافة وتعديل القاعات والأسعار والسعة
             </p>
           </div>
         </div>
       </div>
 
-      {venues.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center text-slate-400">
-          لا توجد منشآت مرتبطة بحسابك حالياً. يرجى التواصل مع إدارة المنصة.
-        </div>
-      ) : (
-        <OwnerVenuesClient venues={venues} />
-      )}
+      <OwnerVenuesClient venues={venues} categories={categories} />
     </div>
   );
 }

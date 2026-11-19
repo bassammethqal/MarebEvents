@@ -105,13 +105,14 @@ async function getAdminData() {
         u.email,
         u.phone,
         u.must_change_password as "mustChangePassword",
-        v.name as "venueName",
-        vm.role,
-        vm.created_at as "createdAt"
-      FROM venue_members vm
-      JOIN users u ON u.id = vm.user_id
-      JOIN venues v ON v.id = vm.venue_id
-      ORDER BY vm.created_at DESC
+        COALESCE(v.name, 'لم يضف منشأة بعد') as "venueName",
+        COALESCE(vm.role, 'owner') as role,
+        u.created_at as "createdAt"
+      FROM users u
+      LEFT JOIN venue_members vm ON vm.user_id = u.id
+      LEFT JOIN venues v ON v.id = vm.venue_id
+      WHERE u.role = 'owner'
+      ORDER BY u.created_at DESC
     `,
   ]);
 
@@ -220,9 +221,9 @@ export default async function AdminPage() {
           <CreateVenueForm categories={categories} owners={owners} />
         </section>
 
-        {/* Section 2: Create Owner Account Form (with + new venue option) */}
+        {/* Section 2: Create Owner Account Form */}
         <section>
-          <CreateOwnerForm venues={venues} categories={categories} />
+          <CreateOwnerForm />
         </section>
 
         {/* Section 3: Registered Venues Management Table */}

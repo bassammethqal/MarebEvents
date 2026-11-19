@@ -144,11 +144,11 @@ export async function updateProfileAction(
 }
 
 /**
- * Server Action: إنشاء حساب مالك منشأة بواسطة إدارة المنصة مع كلمة مرور مؤقتة وربطه بالمنشأة
+ * Server Action: إنشاء حساب مالك منشأة بواسطة إدارة المنصة مع كلمة مرور مؤقتة (دون الحاجة لربطه بمنشأة مسبقاً)
  */
 export async function createOwnerByAdminAction(
   formData: FormData
-): Promise<ActionResult<{ userId: string; fullName: string; tempPassword: string; venueId: string }>> {
+): Promise<ActionResult<{ userId: string; fullName: string; tempPassword: string; identifier: string }>> {
   try {
     // 1. التحقق من صلاحية المدير حصراً
     await requireAdmin();
@@ -157,7 +157,6 @@ export async function createOwnerByAdminAction(
     const rawEmail = (formData.get("email") as string) || null;
     const rawPhone = (formData.get("phone") as string) || null;
     const tempPassword = (formData.get("tempPassword") as string)?.trim();
-    const venueId = (formData.get("venueId") as string)?.trim();
 
     const email = normalizeEmail(rawEmail || undefined);
     const phone = normalizePhone(rawPhone || undefined);
@@ -174,137 +173,7 @@ export async function createOwnerByAdminAction(
       return { success: false, error: "كلمة المرور المؤقتة يجب أن تتكون من 8 خانات على الأقل." };
     }
 
-    if (!venueId) {
-      return { success: false, error: "يرجى تحديد المنشأة المراد ربط المالك بها." };
-    }
-
-    let finalVenueId = venueId;
-    let finalVenueName = "";
-
-    // إذا تم اختيار إنشاء منشأة جديدة في نفس الوقت
-    if (venueId === "__new__") {
-      const newVenueName = (formData.get("newVenueName") as string)?.trim();
-      const newVenueCategoryId = (formData.get("newVenueCategoryId") as string)?.trim();
-      const newVenueDistrict = (formData.get("newVenueDistrict") as string)?.trim() || "حي الروضة";
-      const newVenueCapacity = Math.max(1, parseInt((formData.get("newVenueCapacity") as string) || "300", 10));
-      const newVenueEveningPrice = parseFloat((formData.get("newVenueEveningPrice") as string) || "150000") || 150000;
-
-      if (!newVenueName) {
-        return { success: false, error: "يرجى كتابة اسم المنشأة الجديدة المراد إنشاؤها." };
-      }
-      if (!newVenueCategoryId) {
-        return { success: false, error: "يرجى تحديد تصنيف المنشأة الجديدة." };
-      }
-
-      finalVenueId = "venue_" + crypto.randomUUID().replace(/-/g, "").substring(0, 12);
-      finalVenueName = newVenueName;
-
-      const transliteratedSlug = "venue-" + Math.random().toString(36).substring(2, 8);
-      const unitId = "unit_" + crypto.randomUUID().replace(/-/g, "").substring(0, 12);
-      const imageId = "img_" + crypto.randomUUID().replace(/-/g, "").substring(0, 12);
-      const defaultImg = "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80";
-      const nowTime = new Date().toISOString();
-
-      // 4. تشفير كلمة المرور المؤقتة عبر Argon2id
-      const passwordHash = await hashPassword(tempPassword);
-      const newUserId = crypto.randomUUID();
-      const newMemberId = crypto.randomUUID();
-
-      await client.begin(async (sql) => {
-        // إنشاء المنشأة الجديدة
-        await sql`
-          INSERT INTO venues (
-            id, category_id, name, slug, description, city, district,
-            contact_phone, contact_whatsapp, status, default_currency,
-            default_deposit_percentage, has_multiple_units, featured,
-            created_at, updated_at
-          ) VALUES (
-            ${finalVenueId}, ${newVenueCategoryId}, ${newVenueName}, ${transliteratedSlug},
-            NULL, 'مأرب', ${newVenueDistrict},
-            ${phone || "773461637"}, ${phone ? "967" + phone.replace(/^0+/, "") : "967773461637"},
-            'active', 'YER', 30.0, false, false, ${nowTime}, ${nowTime}
-          )
-        `;
-
-        // إدراج الصورة
-        await sql`
-          INSERT INTO venue_images (
-            id, venue_id, image_url, storage_path, storage_type,
-            alt_text, is_cover, display_order, created_at
-          ) VALUES (
-            ${imageId}, ${finalVenueId}, ${defaultImg}, ${defaultImg}, 'local',
-            ${newVenueName}, true, 0, ${nowTime}
-          )
-        `;
-
-        // إدراج الوحدة
-        await sql`
-          INSERT INTO venue_units (
-            id, venue_id, name, unit_type, capacity_min, capacity_max,
-            is_active, created_at, updated_at
-          ) VALUES (
-            ${unitId}, ${finalVenueId}, 'القاعة الرئيسية', 'full_venue', 50, ${newVenueCapacity},
-            true, ${nowTime}, ${nowTime}
-          )
-        `;
-
-        // إدراج السعر
-        const tierId = "tier_" + crypto.randomUUID().replace(/-/g, "").substring(0, 12);
-        await sql`
-          INSERT INTO pricing_tiers (
-            id, venue_id, unit_id, shift, price, currency, created_at
-          ) VALUES (
-            ${tierId}, ${finalVenueId}, ${unitId}, 'evening', ${newVenueEveningPrice}, 'YER', ${nowTime}
-          )
-        `;
-
-        // إنشاء المستخدم
-        await sql`
-          INSERT INTO users (
-            id, email, phone, password_hash, full_name, role,
-            avatar_url, is_active, failed_login_attempts, lockout_until,
-            must_change_password, created_at, updated_at
-          ) VALUES (
-            ${newUserId}, ${email}, ${phone}, ${passwordHash}, ${fullName}, 'owner',
-            NULL, true, 0, NULL,
-            true, ${nowTime}, ${nowTime}
-          )
-        `;
-
-        // ربط المالك بالمنشأة
-        await sql`
-          INSERT INTO venue_members (
-            id, venue_id, user_id, role, permissions, created_at
-          ) VALUES (
-            ${newMemberId}, ${finalVenueId}, ${newUserId}, 'primary_owner', '{"full_access":true}', ${nowTime}
-          )
-        `;
-      });
-
-      revalidatePath("/admin");
-      revalidatePath("/explore");
-      revalidatePath("/");
-
-      return {
-        success: true,
-        data: {
-          userId: newUserId,
-          fullName,
-          tempPassword,
-          venueId: finalVenueId,
-        },
-      };
-    }
-
-    // 2. التحقق من وجود المنشأة
-    const [venue] = await client<[{ id: string; name: string }?]>`
-      SELECT id, name FROM venues WHERE id = ${venueId} LIMIT 1
-    `;
-    if (!venue) {
-      return { success: false, error: "المنشأة المحددة غير موجودة في النظام." };
-    }
-
-    // 3. التحقق من عدم تكرار البريد ورقم الهاتف
+    // 2. التحقق من عدم تكرار البريد ورقم الهاتف
     if (email) {
       const [existingEmail] = await client<[{ id: string }?]>`
         SELECT id FROM users WHERE email = ${email} LIMIT 1
@@ -323,35 +192,23 @@ export async function createOwnerByAdminAction(
       }
     }
 
-    // 4. تشفير كلمة المرور المؤقتة عبر Argon2id
+    // 3. تشفير كلمة المرور المؤقتة عبر Argon2id
     const passwordHash = await hashPassword(tempPassword);
     const newUserId = crypto.randomUUID();
-    const newMemberId = crypto.randomUUID();
     const now = new Date().toISOString();
 
-    // 5. إدراج المالك وتعيين mustChangePassword = true وربطه بالمنشأة داخل معاملة
-    await client.begin(async (sql) => {
-      await sql`
-        INSERT INTO users (
-          id, email, phone, password_hash, full_name, role,
-          avatar_url, is_active, failed_login_attempts, lockout_until,
-          must_change_password, created_at, updated_at
-        ) VALUES (
-          ${newUserId}, ${email}, ${phone}, ${passwordHash}, ${fullName}, 'owner',
-          NULL, true, 0, NULL,
-          true, ${now}, ${now}
-        )
-      `;
-
-      await sql`
-        INSERT INTO venue_members (
-          id, venue_id, user_id, role, permissions, created_at
-        ) VALUES (
-          ${newMemberId}, ${venueId}, ${newUserId}, 'primary_owner', '{"full_access":true}', ${now}
-        )
-        ON CONFLICT (venue_id, user_id) DO UPDATE SET role = 'primary_owner'
-      `;
-    });
+    // 4. إدراج المالك وتعيين mustChangePassword = true
+    await client`
+      INSERT INTO users (
+        id, email, phone, password_hash, full_name, role,
+        avatar_url, is_active, failed_login_attempts, lockout_until,
+        must_change_password, created_at, updated_at
+      ) VALUES (
+        ${newUserId}, ${email}, ${phone}, ${passwordHash}, ${fullName}, 'owner',
+        NULL, true, 0, NULL,
+        true, ${now}, ${now}
+      )
+    `;
 
     revalidatePath("/admin");
     return {
@@ -360,7 +217,7 @@ export async function createOwnerByAdminAction(
         userId: newUserId,
         fullName,
         tempPassword,
-        venueId,
+        identifier: phone || email || "",
       },
     };
   } catch (err: unknown) {

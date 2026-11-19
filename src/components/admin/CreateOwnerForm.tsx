@@ -7,33 +7,14 @@ import {
   Key,
   Copy,
   Check,
-  Building,
   RefreshCw,
   Phone,
   Mail,
   User,
   ShieldCheck,
   AlertCircle,
-  PlusCircle,
   Sparkles,
 } from "lucide-react";
-
-interface VenueOption {
-  id: string;
-  name: string;
-  city: string;
-  district: string;
-}
-
-interface CategoryOption {
-  id: string;
-  nameAr: string;
-}
-
-interface CreateOwnerFormProps {
-  venues: VenueOption[];
-  categories?: CategoryOption[];
-}
 
 function generateSecureTempPassword(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
@@ -44,19 +25,11 @@ function generateSecureTempPassword(): string {
   return pwd;
 }
 
-export function CreateOwnerForm({ venues, categories = [] }: CreateOwnerFormProps) {
+export function CreateOwnerForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [tempPassword, setTempPassword] = useState(generateSecureTempPassword());
-  const [venueId, setVenueId] = useState(venues[0]?.id || "__new__");
-
-  // New venue quick fields
-  const [newVenueName, setNewVenueName] = useState("");
-  const [newVenueCategoryId, setNewVenueCategoryId] = useState(categories[0]?.id || "cat_weddings");
-  const [newVenueDistrict, setNewVenueDistrict] = useState("حي الروضة");
-  const [newVenueCapacity, setNewVenueCapacity] = useState("300");
-  const [newVenueEveningPrice, setNewVenueEveningPrice] = useState("150000");
 
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -65,7 +38,6 @@ export function CreateOwnerForm({ venues, categories = [] }: CreateOwnerFormProp
     fullName: string;
     identifier: string;
     tempPassword: string;
-    venueName: string;
   } | null>(null);
 
   function handleGenerateNewPassword() {
@@ -95,37 +67,20 @@ export function CreateOwnerForm({ venues, categories = [] }: CreateOwnerFormProp
     if (email.trim()) formData.append("email", email.trim());
     if (phone.trim()) formData.append("phone", phone.trim());
     formData.append("tempPassword", tempPassword);
-    formData.append("venueId", venueId);
-
-    if (venueId === "__new__") {
-      formData.append("newVenueName", newVenueName);
-      formData.append("newVenueCategoryId", newVenueCategoryId);
-      formData.append("newVenueDistrict", newVenueDistrict);
-      formData.append("newVenueCapacity", newVenueCapacity);
-      formData.append("newVenueEveningPrice", newVenueEveningPrice);
-    }
 
     const res = await createOwnerByAdminAction(formData);
 
     if (res.success && res.data) {
-      const selectedVenue = venues.find((v) => v.id === venueId);
-      const displayedVenueName =
-        venueId === "__new__"
-          ? newVenueName || "المنشأة الجديدة"
-          : selectedVenue?.name || "المنشأة";
-
       setCreatedData({
         fullName,
         identifier: phone || email,
         tempPassword,
-        venueName: displayedVenueName,
       });
 
       // Reset form
       setFullName("");
       setEmail("");
       setPhone("");
-      setNewVenueName("");
       setTempPassword(generateSecureTempPassword());
       setLoading(false);
     } else {
@@ -142,9 +97,9 @@ export function CreateOwnerForm({ venues, categories = [] }: CreateOwnerFormProp
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>لوحة تحكم الإدارة</span>
           </div>
-          <h2 className="text-xl font-black text-white">إضافة مالك منشأة جديد</h2>
+          <h2 className="text-xl font-black text-white">إضافة حساب مالك جديد</h2>
           <p className="text-xs text-slate-400 mt-1">
-            إنشاء حساب معتمد برقم الهاتف/البريد وكلمة مرور مؤقتة، وربطه بمنشأة حالية أو جديدة
+            إنشاء حساب المالك بكلمة مرور مؤقتة، ويقوم المالك بنفسه بعد تسجيل الدخول بإضافة بيانات منشأته
           </p>
         </div>
 
@@ -158,7 +113,7 @@ export function CreateOwnerForm({ venues, categories = [] }: CreateOwnerFormProp
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 font-black text-sm text-emerald-300">
               <Check className="w-5 h-5 text-emerald-400" />
-              <span>تم إنشاء حساب المالك وربطه بالمنشأة بنجاح!</span>
+              <span>تم إنشاء حساب المالك بنجاح! جاهز للإرسال للمالك:</span>
             </div>
             <button
               type="button"
@@ -174,244 +129,135 @@ export function CreateOwnerForm({ venues, categories = [] }: CreateOwnerFormProp
               <strong className="text-slate-400 font-sans">الاسم:</strong> {createdData.fullName}
             </p>
             <p>
-              <strong className="text-slate-400 font-sans">المنشأة:</strong> {createdData.venueName}
+              <strong className="text-slate-400 font-sans">اسم المستخدم / المعرف:</strong> {createdData.identifier}
             </p>
-            <p>
-              <strong className="text-slate-400 font-sans">بيانات الدخول:</strong> {createdData.identifier}
-            </p>
-            <div className="flex items-center justify-between pt-1">
-              <span>
+            <div className="flex items-center justify-between pt-1 border-t border-slate-800">
+              <p>
                 <strong className="text-slate-400 font-sans">كلمة المرور المؤقتة:</strong>{" "}
                 <span className="text-amber-400 font-bold">{createdData.tempPassword}</span>
-              </span>
+              </p>
               <button
                 type="button"
-                onClick={() => handleCopyPassword(createdData.tempPassword)}
-                className="inline-flex items-center gap-1 text-[11px] bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded-lg transition cursor-pointer"
+                onClick={() =>
+                  handleCopyPassword(
+                    `بيانات حسابك في مأرب إيفنتس:\nالاسم: ${createdData.fullName}\nالمعرف: ${createdData.identifier}\nكلمة المرور المؤقتة: ${createdData.tempPassword}\nرابط الدخول: https://marebevents.com/owner/login`
+                  )
+                }
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-sans font-bold transition"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? "تم النسخ" : "نسخ الرمز"}</span>
+                <Copy className="w-3.5 h-3.5" />
+                <span>نسخ الرسالة بالكامل</span>
               </button>
             </div>
           </div>
-
-          <p className="text-[11px] text-emerald-400/90 font-medium">
-            * سيُطلب من المالك تلقائياً تعيين كلمة مرور جديدة وخاصة به بمجرد تسجيل الدخول في{" "}
-            <code className="text-amber-400">/owner/login</code>.
+          <p className="text-[11px] text-emerald-400/90 font-sans">
+            * سيُطلب من المالك تلقائياً تعيين كلمة مرور جديدة خاصة به عند أول تسجيل دخول له من `/owner/login`.
           </p>
         </div>
       )}
 
       {error && (
-        <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2 font-medium">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+        <div className="mb-6 p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Full Name */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-slate-400" />
-              <span>الاسم الكامل لمالك المنشأة</span>
-              <span className="text-rose-400">*</span>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-bold text-slate-300 mb-1.5">
+              الاسم الكامل للمالك <span className="text-rose-400">*</span>
             </label>
-            <input
-              type="text"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="مثال: صالح محمد المرادي"
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-amber-400 transition"
-            />
-          </div>
-
-          {/* Venue Selection */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-              <Building className="w-3.5 h-3.5 text-slate-400" />
-              <span>المنشأة المراد ربطه بها</span>
-              <span className="text-rose-400">*</span>
-            </label>
-            <select
-              required
-              value={venueId}
-              onChange={(e) => setVenueId(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-amber-400 transition cursor-pointer"
-            >
-              <option value="__new__" className="bg-amber-950/90 text-amber-300 font-bold">
-                ✨ + إنشاء منشأة جديدة وربطها بهذا المالك فوراً
-              </option>
-              {venues.map((venue) => (
-                <option key={venue.id} value={venue.id} className="bg-slate-900 text-white">
-                  {venue.name} ({venue.city} - {venue.district})
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Collapsible: Quick New Venue Creation Fields */}
-        {venueId === "__new__" && (
-          <div className="p-4 bg-amber-500/5 border border-amber-500/30 rounded-2xl space-y-4 animate-in fade-in duration-150">
-            <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>بيانات المنشأة الجديدة السريعة:</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] text-slate-300 mb-1">
-                  اسم المنشأة الجديدة <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  required={venueId === "__new__"}
-                  value={newVenueName}
-                  onChange={(e) => setNewVenueName(e.target.value)}
-                  placeholder="مثال: شاليهات اللؤلؤة السياحية"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] text-slate-300 mb-1">
-                  التصنيف <span className="text-rose-400">*</span>
-                </label>
-                <select
-                  value={newVenueCategoryId}
-                  onChange={(e) => setNewVenueCategoryId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400 transition cursor-pointer"
-                >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id} className="bg-slate-900 text-white">
-                      {c.nameAr}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[11px] text-slate-300 mb-1">
-                  الحي / المنطقة في مأرب
-                </label>
-                <input
-                  type="text"
-                  value={newVenueDistrict}
-                  onChange={(e) => setNewVenueDistrict(e.target.value)}
-                  placeholder="مثال: حي الروضة"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] text-slate-300 mb-1">
-                  السعة القصوى للضيوف
-                </label>
-                <input
-                  type="number"
-                  value={newVenueCapacity}
-                  onChange={(e) => setNewVenueCapacity(e.target.value)}
-                  placeholder="300"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] text-slate-300 mb-1">
-                  السعر المسائي (ر.ي)
-                </label>
-                <input
-                  type="number"
-                  value={newVenueEveningPrice}
-                  onChange={(e) => setNewVenueEveningPrice(e.target.value)}
-                  placeholder="150000"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-amber-400 font-bold text-xs focus:outline-none focus:border-amber-400 transition"
-                />
-              </div>
+            <div className="relative">
+              <input
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="مثال: يحيى صالح المرادي"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl py-2.5 pr-10 pl-3 text-xs text-slate-100 placeholder:text-slate-600 outline-none transition"
+              />
+              <User className="w-4 h-4 text-slate-500 absolute right-3.5 top-3" />
             </div>
           </div>
-        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Phone */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5 text-slate-400" />
-              <span>رقم الهاتف المعتمد للمالك</span>
-              <span className="text-slate-500 text-[11px]">(مفضل للدخول السريع)</span>
+            <label className="block text-xs font-bold text-slate-300 mb-1.5">
+              رقم الهاتف (الأساسي لتسجيل الدخول)
             </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="مثال: 773461637"
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-amber-400 transition text-left"
-              dir="ltr"
-            />
+            <div className="relative">
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="77XXXXXXX أو 71XXXXXXX"
+                dir="ltr"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl py-2.5 pr-10 pl-3 text-xs text-slate-100 placeholder:text-slate-600 outline-none transition text-right"
+              />
+              <Phone className="w-4 h-4 text-slate-500 absolute right-3.5 top-3" />
+            </div>
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5 text-slate-400" />
-              <span>البريد الإلكتروني</span>
-              <span className="text-slate-500 text-[11px]">(اختياري)</span>
+            <label className="block text-xs font-bold text-slate-300 mb-1.5">
+              البريد الإلكتروني (اختياري)
             </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="owner@example.com"
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-amber-400 transition text-left"
-              dir="ltr"
-            />
+            <div className="relative">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="owner@example.com"
+                dir="ltr"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl py-2.5 pr-10 pl-3 text-xs text-slate-100 placeholder:text-slate-600 outline-none transition text-right"
+              />
+              <Mail className="w-4 h-4 text-slate-500 absolute right-3.5 top-3" />
+            </div>
           </div>
         </div>
 
-        {/* Temporary Password with Generator & Copy */}
+        {/* Temporary Password */}
         <div>
-          <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
-            <span className="flex items-center gap-1.5">
-              <Key className="w-3.5 h-3.5 text-amber-400" />
-              <span>كلمة المرور المؤقتة (Temporary Password)</span>
-              <span className="text-rose-400">*</span>
-            </span>
-            <span className="text-[11px] text-amber-400 font-mono">
-              سيُجبر على تغييرها فور أول تسجيل دخول
-            </span>
+          <label className="block text-xs font-bold text-slate-300 mb-1.5">
+            كلمة المرور المؤقتة (الأولية) <span className="text-rose-400">*</span>
           </label>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              required
-              value={tempPassword}
-              onChange={(e) => setTempPassword(e.target.value)}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-amber-400 font-mono font-bold text-xs sm:text-sm focus:outline-none focus:border-amber-400 transition text-left"
-              dir="ltr"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                required
+                value={tempPassword}
+                onChange={(e) => setTempPassword(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl py-2.5 pr-10 pl-3 text-xs font-mono text-amber-400 font-bold outline-none transition"
+              />
+              <Key className="w-4 h-4 text-slate-500 absolute right-3.5 top-3" />
+            </div>
             <button
               type="button"
               onClick={handleGenerateNewPassword}
-              title="توليد كلمة مرور أخرى"
-              className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+              title="توليد كلمة مرور عشوائية جديدة"
+              className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">توليد جديد</span>
             </button>
             <button
               type="button"
               onClick={() => handleCopyPassword()}
-              className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+              title="نسخ كلمة المرور"
+              className="px-3 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? "تم النسخ" : "نسخ"}</span>
             </button>
           </div>
+          <p className="text-[11px] text-slate-500 mt-1.5">
+            * يتم تشفير هذه الكلمة عبر خوارزمية Argon2id، وسيتم إلزام المالك بتغييرها فور تسجيل دخوله.
+          </p>
         </div>
 
         {/* Submit Button */}
@@ -419,9 +265,19 @@ export function CreateOwnerForm({ venues, categories = [] }: CreateOwnerFormProp
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-sm shadow-lg shadow-amber-500/20 transition active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {loading ? "جاري إنشاء الحساب والربط..." : "إنشاء حساب المالك وتعيين كلمة المرور المؤقتة"}
+            {loading ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>جاري إنشاء الحساب...</span>
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-4 h-4" />
+                <span>إنشاء حساب المالك</span>
+              </>
+            )}
           </button>
         </div>
       </form>
