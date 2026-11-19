@@ -1,13 +1,11 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
-import { logoutAction } from "@/lib/auth/actions";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { getCachedActiveVenues } from "@/lib/venues/cached";
 import { getUserFavoriteIds } from "@/lib/favorites/actions";
 import { MessageCircle } from "lucide-react";
-import { Pin3D, Wedding3D } from "@/components/ui/Icons3D";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { NotificationPopover } from "@/components/ui/NotificationPopover";
+import { Wedding3D } from "@/components/ui/Icons3D";
 import {
   VenueFeedWithFilter,
   VenueItem,
@@ -30,15 +28,7 @@ async function UserStatusHeader() {
           <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
           <span className="max-w-[70px] truncate">{firstName}</span>
         </Link>
-        <form action={logoutAction}>
-          <button
-            type="submit"
-            aria-label="تسجيل الخروج"
-            className="text-[10px] text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/70 px-2 py-1 rounded-full transition font-semibold"
-          >
-            خروج
-          </button>
-        </form>
+        <LogoutButton variant="pill" />
       </div>
     );
   }
@@ -62,38 +52,6 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col selection:bg-amber-500/20 selection:text-amber-900 scroll-smooth">
-      {/* 1. Top Clean Header (h-16, bg-white/95) */}
-      <header className="h-16 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-30 px-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 shadow-xs">
-        {/* Right: Brand Icon & Name */}
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xl shadow-xs shrink-0">
-            م
-          </div>
-          <span className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-            مأرب إيفنتس
-          </span>
-        </Link>
-
-        {/* Center: Location Capsule */}
-        <div className="bg-slate-100/80 dark:bg-slate-800/80 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-center shadow-2xs">
-          <Pin3D className="w-4 h-4 shrink-0" />
-          <div className="text-right">
-            <div className="text-[10px] text-slate-400 font-medium leading-none">
-              موقعك الحالي
-            </div>
-            <div className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">
-              مأرب، اليمن
-            </div>
-          </div>
-        </div>
-
-        {/* Left: Action Buttons (ThemeToggle, NotificationPopover) */}
-        <div className="flex items-center gap-1.5">
-          <ThemeToggle />
-          <NotificationPopover />
-        </div>
-      </header>
-
       {/* Sub-header User strip */}
       <div className="px-4 pt-2.5 pb-1 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <span className="font-medium">مرحباً بك في مأرب</span>

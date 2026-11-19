@@ -193,23 +193,7 @@ async function BookingsContent() {
 
 export default function MyBookingsPage() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-4 py-6">
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-6">
-        <div>
-          <h1 className="text-lg font-black">حجوزاتي</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            متابعة كافة طلباتك ومواعيد مناسباتك
-          </p>
-        </div>
-        <Link
-          href="/"
-          className="text-xs text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 font-bold"
-        >
-          <span>الرئيسية</span>
-          <ArrowLeft className="w-3.5 h-3.5" />
-        </Link>
-      </div>
-
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-4 py-4">
       <Suspense
         fallback={
           <div className="max-w-md mx-auto py-16 text-center text-slate-400 text-xs">

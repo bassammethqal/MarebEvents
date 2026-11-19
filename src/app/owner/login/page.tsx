@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { loginAction } from "@/lib/auth/actions";
+import { LoggedOutAlert } from "@/components/auth/LoggedOutAlert";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageCircle, ShieldCheck, ArrowRight } from "lucide-react";
@@ -56,6 +57,8 @@ export default function OwnerLoginPage() {
             إدارة الحجوزات، المواعيد، وجداول الأسعار للقاعات والشاليهات
           </p>
         </div>
+
+        <LoggedOutAlert />
 
         {error && (
           <div className="mb-5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs text-center font-medium leading-relaxed">

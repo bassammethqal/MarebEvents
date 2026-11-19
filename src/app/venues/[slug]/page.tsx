@@ -144,19 +144,6 @@ export default async function VenueDetailsPage({
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20">
-      {/* Top Header */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-4 h-14 flex items-center justify-between">
-        <Link
-          href="/"
-          className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 transition"
-          aria-label="العودة للرئيسية"
-        >
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-        <span className="font-bold text-sm truncate max-w-[200px]">{venue.name}</span>
-        <FavoriteButton venueId={venue.id} initialFavorited={isFavorited} />
-      </div>
-
       {/* Main Cover Image */}
       <div className="relative h-60 w-full bg-slate-200 dark:bg-slate-800">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -165,6 +152,9 @@ export default async function VenueDetailsPage({
           alt={venue.name}
           className="w-full h-full object-cover"
         />
+        <div className="absolute top-3 left-3 z-10">
+          <FavoriteButton venueId={venue.id} initialFavorited={isFavorited} />
+        </div>
         {venue.category_name && (
           <div className="absolute bottom-3 right-3 bg-slate-900/80 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full">
             {venue.category_name}

@@ -1,12 +1,13 @@
 "use server";
 
 import { registerUser, loginUser, logoutUser, normalizeEmail, normalizePhone, type RegisterInput } from "./service";
-import { getCurrentSession, type SafeUser } from "./session";
+import { getCurrentSession, removeSessionCookie, type SafeUser } from "./session";
 import { requireAuth, requireAdmin, assertCanModifyProfile } from "./guards";
 import { hashPassword } from "./password";
 import { db, schema, client } from "@/db";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import crypto from "crypto";
 
 export interface ActionResult<T = unknown> {
@@ -67,18 +68,40 @@ export async function loginAction(
 }
 
 /**
- * Server Action: تسجيل الخروج
+ * Server Action: تسجيل الخروج الفوري مع توجيه مخصص حسب الدور
  */
 export async function logoutAction(): Promise<void> {
+  let targetPath = "/login?logged_out=1";
+
   try {
     const current = await getCurrentSession();
     if (current) {
-      await logoutUser(current.session.id);
+      if (current.user.role === "admin") {
+        targetPath = "/admin/login?logged_out=1";
+      } else if (current.user.role === "owner") {
+        targetPath = "/owner/login?logged_out=1";
+      }
+
+      // حذف الجلسة من جدول sessions في الخلفية بدون حجب الاستجابة
+      const sessionId = current.session.id;
+      void db
+        .delete(schema.sessions)
+        .where(eq(schema.sessions.id, sessionId))
+        .catch((err) => console.error("Async session deletion error:", err));
     }
-  } catch {
-    // تجاهل أخطاء الجلسة أثناء الخروج
+  } catch (err) {
+    console.error("logoutAction error:", err);
   }
-  revalidatePath("/");
+
+  // حذف كوكي الجلسة فوراً
+  try {
+    await removeSessionCookie();
+  } catch (err) {
+    console.error("removeSessionCookie error:", err);
+  }
+
+  revalidatePath("/", "layout");
+  redirect(targetPath);
 }
 
 /**

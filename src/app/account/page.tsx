@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
-import { logoutAction } from "@/lib/auth/actions";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { db, schema } from "@/db";
 import { eq, sql } from "drizzle-orm";
 import {
@@ -42,18 +42,7 @@ export default async function AccountPage() {
   const favoritesCount = Number(favoritesRes[0]?.count) || 0;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-4 py-6 pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-6">
-        <h1 className="text-xl font-black">حسابي</h1>
-        <Link
-          href="/"
-          className="text-xs text-amber-600 dark:text-amber-400 font-bold hover:underline"
-        >
-          الرئيسية
-        </Link>
-      </div>
-
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-4 py-4 pb-24">
       {/* User Profile Card */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-xs mb-5">
         <div className="flex items-center gap-3.5 mb-4">
@@ -220,15 +209,7 @@ export default async function AccountPage() {
       </div>
 
       {/* Logout Button */}
-      <form action={logoutAction}>
-        <button
-          type="submit"
-          className="w-full py-3 px-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/70 text-rose-600 dark:text-rose-400 font-bold text-xs rounded-2xl transition flex items-center justify-center gap-2 active:scale-95 border border-rose-200/60 dark:border-rose-900/40 cursor-pointer"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>تسجيل الخروج من الحساب</span>
-        </button>
-      </form>
+      <LogoutButton variant="button" />
     </div>
   );
 }

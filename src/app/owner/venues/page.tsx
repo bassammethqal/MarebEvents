@@ -96,27 +96,6 @@ export default async function OwnerVenuesPage() {
 
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-5 space-y-4 animate-in fade-in duration-300">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex items-center gap-2">
-          <Link
-            href="/owner"
-            className="p-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-          <div>
-            <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-amber-700 dark:text-amber-400" />
-              إدارة المنشآت
-            </h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              إضافة وتعديل القاعات والأسعار والسعة
-            </p>
-          </div>
-        </div>
-      </div>
-
       <OwnerVenuesClient venues={venues} categories={categories} />
     </div>
   );

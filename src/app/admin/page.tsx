@@ -1,6 +1,8 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { client } from "@/db";
-import { logoutAction } from "@/lib/auth/actions";
+import { LogoutButton } from "@/components/auth/LogoutButton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { NotificationPopover } from "@/components/ui/NotificationPopover";
 import { CreateOwnerForm } from "@/components/admin/CreateOwnerForm";
 import {
   VenuesManagementTable,
@@ -103,7 +105,9 @@ export default async function AdminPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
+            <ThemeToggle />
+            <NotificationPopover />
             <Link
               href="/owner"
               className="text-xs font-bold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 px-3.5 py-2 rounded-xl transition inline-flex items-center gap-1.5"
@@ -117,15 +121,7 @@ export default async function AdminPage() {
             >
               عرض المنصة
             </Link>
-            <form action={logoutAction}>
-              <button
-                type="submit"
-                className="text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-950/70 border border-rose-900/50 px-3.5 py-2 rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>خروج</span>
-              </button>
-            </form>
+            <LogoutButton variant="compact" />
           </div>
         </header>
 

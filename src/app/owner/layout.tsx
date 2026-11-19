@@ -3,6 +3,7 @@ import { requireOwnerOrAdmin } from "@/lib/auth/guards";
 import { redirect } from "next/navigation";
 import { ForcePasswordChangeModal } from "@/components/owner/ForcePasswordChangeModal";
 import { OwnerBottomNav } from "@/components/owner/OwnerBottomNav";
+import { OwnerTopAppBar } from "@/components/owner/OwnerTopAppBar";
 
 export const instant = false;
 
@@ -33,6 +34,7 @@ export default async function OwnerLayout({
         <ForcePasswordChangeModal userFullName={user.fullName} />
       )}
       <div className="w-full max-w-[430px] mx-auto min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 shadow-[0_0_50px_rgba(15,23,42,0.08)] dark:shadow-[0_0_50px_rgba(0,0,0,0.5)] border-x border-transparent dark:border-slate-800/80 relative pb-24 overflow-x-hidden flex flex-col transition-colors duration-200">
+        <OwnerTopAppBar />
         {children}
         <OwnerBottomNav />
       </div>

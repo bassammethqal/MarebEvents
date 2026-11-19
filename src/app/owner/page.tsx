@@ -1,7 +1,5 @@
 import { requireOwnerOrAdmin } from "@/lib/auth/guards";
 import { client } from "@/db";
-import { logoutAction } from "@/lib/auth/actions";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { PendingBookingsList, PendingBookingItem } from "@/components/owner/PendingBookingsList";
 import { OwnerOnboardingCard } from "@/components/owner/OwnerOnboardingCard";
 import Link from "next/link";
@@ -142,39 +140,26 @@ export default async function OwnerDashboardPage() {
 
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-5 space-y-5 animate-in fade-in duration-300">
-      {/* 1. Header with Name, Badge, ThemeToggle & Logout */}
-      <div className="flex items-center justify-between pt-1">
+      {/* 1. Owner Profile Summary Card */}
+      <div className="bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-3.5 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white font-black text-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 font-black text-lg flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
             {user.fullName.substring(0, 1)}
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
                 {user.fullName}
-              </h1>
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-500/20">
+              </h2>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                 <ShieldCheck className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
                 مالك معتمد
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              لوحة إدارة المنشآت والحجوزات
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {user.phone || user.email || "حساب منشآت معتمد"}
             </p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <ThemeToggle />
-          <form action={logoutAction}>
-            <button
-              type="submit"
-              title="تسجيل الخروج"
-              className="p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-rose-800 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-900/50 shadow-sm transition active:scale-95"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </form>
         </div>
       </div>
 

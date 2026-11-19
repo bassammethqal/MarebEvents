@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { loginAction } from "@/lib/auth/actions";
+import { LoggedOutAlert } from "@/components/auth/LoggedOutAlert";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -42,6 +43,8 @@ export default function LoginPage() {
             <p className="text-xs text-slate-400 mt-1">مرحباً بك مجدداً في منصة مأرب إيفنتس</p>
           </Link>
         </div>
+
+        <LoggedOutAlert />
 
         {error && (
           <div className="mb-6 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs text-center font-medium">
