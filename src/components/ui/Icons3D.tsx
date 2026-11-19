@@ -572,3 +572,68 @@ export function Chalet3D({ className = "w-5 h-5" }: { className?: string }) {
     </svg>
   );
 }
+
+/**
+ * 12. Calendar3D: أيقونة التقويم والمواعيد ثلاثية الأبعاد
+ */
+export function Calendar3D({ className = "w-6 h-6", active = false }: Icon3DProps) {
+  const id = React.useId();
+  return (
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <defs>
+        <linearGradient id={`cal-body-${id}`} x1="4" y1="8" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={active ? "#F59E0B" : "#F1F5F9"} />
+          <stop offset="100%" stopColor={active ? "#D97706" : "#CBD5E1"} />
+        </linearGradient>
+        <linearGradient id={`cal-header-${id}`} x1="4" y1="6" x2="32" y2="14" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={active ? "#FBBF24" : "#E2E8F0"} />
+          <stop offset="100%" stopColor={active ? "#F59E0B" : "#94A3B8"} />
+        </linearGradient>
+      </defs>
+      {/* Calendar base plate with shadow */}
+      <rect x="5" y="8" width="26" height="23" rx="6" fill={`url(#cal-body-${id})`} />
+      {/* Calendar top bar */}
+      <rect x="5" y="8" width="26" height="8" rx="6" fill={`url(#cal-header-${id})`} />
+      {/* Binder rings */}
+      <rect x="10" y="5" width="3" height="6" rx="1.5" fill={active ? "#B45309" : "#64748B"} />
+      <rect x="23" y="5" width="3" height="6" rx="1.5" fill={active ? "#B45309" : "#64748B"} />
+      {/* Grid dots */}
+      <circle cx="11" cy="20" r="1.5" fill={active ? "#78350F" : "#64748B"} />
+      <circle cx="18" cy="20" r="1.5" fill={active ? "#78350F" : "#64748B"} />
+      <circle cx="25" cy="20" r="1.5" fill={active ? "#78350F" : "#64748B"} />
+      <circle cx="11" cy="25" r="1.5" fill={active ? "#78350F" : "#64748B"} />
+      <circle cx="18" cy="25" r="1.5" fill={active ? "#78350F" : "#64748B"} />
+      <circle cx="25" cy="25" r="1.5" fill={active ? "#78350F" : "#64748B"} />
+    </svg>
+  );
+}
+
+/**
+ * 13. Venues3D: أيقونة القاعات والمنشآت ثلاثية الأبعاد
+ */
+export function Venues3D({ className = "w-6 h-6", active = false }: Icon3DProps) {
+  const id = React.useId();
+  return (
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <defs>
+        <linearGradient id={`ven-body-${id}`} x1="6" y1="10" x2="30" y2="32" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={active ? "#F59E0B" : "#F8FAFC"} />
+          <stop offset="100%" stopColor={active ? "#B45309" : "#94A3B8"} />
+        </linearGradient>
+      </defs>
+      {/* Pillars and Hall building */}
+      <path
+        d="M6 14L18 6L30 14V30H6V14Z"
+        fill={`url(#ven-body-${id})`}
+      />
+      {/* Entrance arch */}
+      <path
+        d="M14 30V20C14 17.8 15.8 16 18 16C20.2 16 22 17.8 22 20V30H14Z"
+        fill={active ? "#78350F" : "#475569"}
+      />
+      {/* Columns */}
+      <rect x="9" y="16" width="2.5" height="12" rx="1" fill={active ? "#FDE68A" : "#CBD5E1"} />
+      <rect x="24.5" y="16" width="2.5" height="12" rx="1" fill={active ? "#FDE68A" : "#CBD5E1"} />
+    </svg>
+  );
+}

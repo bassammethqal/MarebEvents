@@ -7,10 +7,16 @@ import { PageTransition } from "@/components/ui/PageTransition";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isDashboard = pathname.startsWith("/admin") || pathname.startsWith("/owner");
-
-  if (isDashboard) {
+  if (pathname.startsWith("/admin")) {
     return <div className="min-h-screen w-full bg-slate-950 text-slate-100">{children}</div>;
+  }
+
+  if (pathname.startsWith("/owner")) {
+    return (
+      <div className="min-h-screen w-full bg-[#EEF2F6] dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+        {children}
+      </div>
+    );
   }
 
   return (

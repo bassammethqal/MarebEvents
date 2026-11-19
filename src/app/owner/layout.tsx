@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { requireOwnerOrAdmin } from "@/lib/auth/guards";
 import { redirect } from "next/navigation";
 import { ForcePasswordChangeModal } from "@/components/owner/ForcePasswordChangeModal";
+import { OwnerBottomNav } from "@/components/owner/OwnerBottomNav";
 
 export const instant = false;
 
@@ -27,15 +28,14 @@ export default async function OwnerLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 relative">
+    <div className="min-h-screen w-full bg-[#EEF2F6] dark:bg-slate-950 flex justify-center selection:bg-amber-500/20 selection:text-amber-800 transition-colors duration-200">
       {user.mustChangePassword && (
         <ForcePasswordChangeModal userFullName={user.fullName} />
       )}
-      <header className="border-b border-amber-500/20 bg-amber-950/20 px-6 py-3 text-xs text-amber-300 font-semibold flex items-center justify-between">
-        <span>لوحة تحكم مالك المنشأة (Owner/Admin) - حماية الخادم مفعلة</span>
-        <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-      </header>
-      <main className="p-6">{children}</main>
+      <div className="w-full max-w-[430px] mx-auto min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 shadow-[0_0_50px_rgba(15,23,42,0.08)] dark:shadow-[0_0_50px_rgba(0,0,0,0.5)] border-x border-transparent dark:border-slate-800/80 relative pb-24 overflow-x-hidden flex flex-col transition-colors duration-200">
+        {children}
+        <OwnerBottomNav />
+      </div>
     </div>
   );
 }
