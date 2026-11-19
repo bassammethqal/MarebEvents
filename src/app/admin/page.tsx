@@ -2,7 +2,6 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { client } from "@/db";
 import { logoutAction } from "@/lib/auth/actions";
 import { CreateOwnerForm } from "@/components/admin/CreateOwnerForm";
-import { CreateVenueForm } from "@/components/admin/CreateVenueForm";
 import {
   VenuesManagementTable,
   AdminVenueRow,
@@ -21,25 +20,6 @@ import {
 
 export const instant = false;
 
-interface VenueOption {
-  id: string;
-  name: string;
-  city: string;
-  district: string;
-}
-
-interface CategoryOption {
-  id: string;
-  nameAr: string;
-}
-
-interface OwnerOption {
-  id: string;
-  fullName: string;
-  phone: string | null;
-  email: string | null;
-}
-
 interface OwnerMemberRow {
   userId: string;
   fullName: string;
@@ -52,20 +32,7 @@ interface OwnerMemberRow {
 }
 
 async function getAdminData() {
-  const [categories, venues, allVenues, owners, ownerMembers] = await Promise.all([
-    client<CategoryOption[]>`
-      SELECT id, name_ar as "nameAr"
-      FROM venue_categories
-      ORDER BY display_order ASC
-    `,
-
-    client<VenueOption[]>`
-      SELECT id, name, city, district
-      FROM venues
-      WHERE status = 'active'
-      ORDER BY name ASC
-    `,
-
+  const [allVenues, ownerMembers] = await Promise.all([
     client<AdminVenueRow[]>`
       SELECT 
         v.id,
@@ -91,13 +58,6 @@ async function getAdminData() {
       ORDER BY v.created_at DESC
     `,
 
-    client<OwnerOption[]>`
-      SELECT id, full_name as "fullName", phone, email
-      FROM users
-      WHERE role = 'owner'
-      ORDER BY full_name ASC
-    `,
-
     client<OwnerMemberRow[]>`
       SELECT 
         u.id as "userId",
@@ -116,12 +76,12 @@ async function getAdminData() {
     `,
   ]);
 
-  return { categories, venues, allVenues, owners, ownerMembers };
+  return { allVenues, ownerMembers };
 }
 
 export default async function AdminPage() {
   const { user } = await requireAdmin();
-  const { categories, venues, allVenues, owners, ownerMembers } = await getAdminData();
+  const { allVenues, ownerMembers } = await getAdminData();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -139,7 +99,7 @@ export default async function AdminPage() {
               أهلاً بك، {user.fullName}
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              إدارة المنشآت والقاعات، إضافة ملاك المنشآت، ومتابعة تفعيل الحجوزات في مأرب
+              إدارة حسابات الملاك، مراقبة المنشآت المسجلة، ومتابعة تفعيل الحجوزات في مأرب
             </p>
           </div>
 
@@ -169,7 +129,7 @@ export default async function AdminPage() {
           </div>
         </header>
 
-        {/* Stats Row */}
+        {/* 1. Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
             <div className="h-11 w-11 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
@@ -216,22 +176,17 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        {/* Section 1: Create New Venue from Scratch */}
-        <section>
-          <CreateVenueForm categories={categories} owners={owners} />
-        </section>
-
-        {/* Section 2: Create Owner Account Form */}
+        {/* 2. Section: Create Owner Account Form */}
         <section>
           <CreateOwnerForm />
         </section>
 
-        {/* Section 3: Registered Venues Management Table */}
+        {/* 3. Section: Registered Venues Management Table */}
         <section>
           <VenuesManagementTable initialVenues={allVenues} />
         </section>
 
-        {/* Section 4: Provisioned Owners List */}
+        {/* 4. Section: Provisioned Owners List */}
         <section className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8">
           <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-800">
             <div>
