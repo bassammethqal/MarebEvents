@@ -1,24 +1,38 @@
+import { headers } from "next/headers";
 import { requireAdmin } from "@/lib/auth/guards";
 import { redirect } from "next/navigation";
+
+export const instant = false;
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headerList = await headers();
+  const pathname = headerList.get("x-pathname") || "";
+
+  // استثناء صفحة تسجيل دخول الإدارة حتى تفتح بحرية بدون فرض الحارس
+  if (pathname.includes("/admin/login")) {
+    return <>{children}</>;
+  }
+
   try {
     await requireAdmin();
   } catch {
-    redirect("/login?next=/admin");
+    redirect("/admin/login");
   }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="border-b border-red-500/20 bg-red-950/20 px-6 py-3 text-xs text-red-300 font-semibold flex items-center justify-between">
-        <span>لوحة تحكم مدير النظام (Admin Only) - حماية الخادم مفعلة</span>
-        <span className="h-2 w-2 rounded-full bg-red-400 animate-pulse" />
+      <header className="border-b border-amber-500/20 bg-slate-900/80 px-6 py-3 text-xs text-amber-300 font-semibold flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>لوحة تحكم مدير النظام (Admin Only) - حماية الخادم مفعلة</span>
+        </div>
+        <span className="text-slate-400 font-mono text-[11px]">مأرب إيفنتس</span>
       </header>
-      <main className="p-6">{children}</main>
+      <main className="p-4 sm:p-6">{children}</main>
     </div>
   );
 }
