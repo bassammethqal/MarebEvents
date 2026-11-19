@@ -2,6 +2,11 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { client } from "@/db";
 import { logoutAction } from "@/lib/auth/actions";
 import { CreateOwnerForm } from "@/components/admin/CreateOwnerForm";
+import { CreateVenueForm } from "@/components/admin/CreateVenueForm";
+import {
+  VenuesManagementTable,
+  AdminVenueRow,
+} from "@/components/admin/VenuesManagementTable";
 import Link from "next/link";
 import {
   Building2,
@@ -11,6 +16,7 @@ import {
   Clock,
   ExternalLink,
   LogOut,
+  Sparkles,
 } from "lucide-react";
 
 export const instant = false;
@@ -20,6 +26,18 @@ interface VenueOption {
   name: string;
   city: string;
   district: string;
+}
+
+interface CategoryOption {
+  id: string;
+  nameAr: string;
+}
+
+interface OwnerOption {
+  id: string;
+  fullName: string;
+  phone: string | null;
+  email: string | null;
 }
 
 interface OwnerMemberRow {
@@ -34,35 +52,75 @@ interface OwnerMemberRow {
 }
 
 async function getAdminData() {
-  const venues = await client<VenueOption[]>`
-    SELECT id, name, city, district
-    FROM venues
-    WHERE status = 'active'
-    ORDER BY name ASC
-  `;
+  const [categories, venues, allVenues, owners, ownerMembers] = await Promise.all([
+    client<CategoryOption[]>`
+      SELECT id, name_ar as "nameAr"
+      FROM venue_categories
+      ORDER BY display_order ASC
+    `,
 
-  const ownerMembers = await client<OwnerMemberRow[]>`
-    SELECT 
-      u.id as "userId",
-      u.full_name as "fullName",
-      u.email,
-      u.phone,
-      u.must_change_password as "mustChangePassword",
-      v.name as "venueName",
-      vm.role,
-      vm.created_at as "createdAt"
-    FROM venue_members vm
-    JOIN users u ON u.id = vm.user_id
-    JOIN venues v ON v.id = vm.venue_id
-    ORDER BY vm.created_at DESC
-  `;
+    client<VenueOption[]>`
+      SELECT id, name, city, district
+      FROM venues
+      WHERE status = 'active'
+      ORDER BY name ASC
+    `,
 
-  return { venues, ownerMembers };
+    client<AdminVenueRow[]>`
+      SELECT 
+        v.id,
+        v.name,
+        v.slug,
+        v.city,
+        v.district,
+        v.status,
+        v.default_currency as "currency",
+        c.name_ar as "categoryName",
+        (SELECT image_url FROM venue_images WHERE venue_id = v.id AND is_cover = true LIMIT 1) as "coverImage",
+        (SELECT capacity_max FROM venue_units WHERE venue_id = v.id ORDER BY capacity_max DESC LIMIT 1) as "maxCapacity",
+        (SELECT MIN(price) FROM pricing_tiers WHERE venue_id = v.id AND shift = 'evening') as "startingPrice",
+        (
+          SELECT u.full_name 
+          FROM venue_members vm 
+          JOIN users u ON u.id = vm.user_id 
+          WHERE vm.venue_id = v.id AND vm.role = 'primary_owner' 
+          LIMIT 1
+        ) as "ownerName"
+      FROM venues v
+      LEFT JOIN venue_categories c ON c.id = v.category_id
+      ORDER BY v.created_at DESC
+    `,
+
+    client<OwnerOption[]>`
+      SELECT id, full_name as "fullName", phone, email
+      FROM users
+      WHERE role = 'owner'
+      ORDER BY full_name ASC
+    `,
+
+    client<OwnerMemberRow[]>`
+      SELECT 
+        u.id as "userId",
+        u.full_name as "fullName",
+        u.email,
+        u.phone,
+        u.must_change_password as "mustChangePassword",
+        v.name as "venueName",
+        vm.role,
+        vm.created_at as "createdAt"
+      FROM venue_members vm
+      JOIN users u ON u.id = vm.user_id
+      JOIN venues v ON v.id = vm.venue_id
+      ORDER BY vm.created_at DESC
+    `,
+  ]);
+
+  return { categories, venues, allVenues, owners, ownerMembers };
 }
 
 export default async function AdminPage() {
   const { user } = await requireAdmin();
-  const { venues, ownerMembers } = await getAdminData();
+  const { categories, venues, allVenues, owners, ownerMembers } = await getAdminData();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -80,7 +138,7 @@ export default async function AdminPage() {
               أهلاً بك، {user.fullName}
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              إدارة حسابات ملاك المنشآت، تعيين كلمات المرور المؤقتة، ومتابعة تفعيل القاعات
+              إدارة المنشآت والقاعات، إضافة ملاك المنشآت، ومتابعة تفعيل الحجوزات في مأرب
             </p>
           </div>
 
@@ -111,14 +169,26 @@ export default async function AdminPage() {
         </header>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
             <div className="h-11 w-11 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-400">إجمالي المنشآت النشطة</div>
-              <div className="text-xl font-black text-white">{venues.length}</div>
+              <div className="text-xs text-slate-400">إجمالي المنشآت</div>
+              <div className="text-xl font-black text-white">{allVenues.length}</div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
+            <div className="h-11 w-11 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs text-slate-400">منشآت نشطة ومعتمدة</div>
+              <div className="text-xl font-black text-white">
+                {allVenues.filter((v) => v.status === "active").length}
+              </div>
             </div>
           </div>
 
@@ -127,17 +197,17 @@ export default async function AdminPage() {
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-400">حسابات الملاك المعتمدة</div>
+              <div className="text-xs text-slate-400">حسابات الملاك</div>
               <div className="text-xl font-black text-white">{ownerMembers.length}</div>
             </div>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
-            <div className="h-11 w-11 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+            <div className="h-11 w-11 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-400">حسابات غيّرت الرمز المؤقت</div>
+              <div className="text-xs text-slate-400">ملاك مفعّلون ومؤمنون</div>
               <div className="text-xl font-black text-white">
                 {ownerMembers.filter((m) => !m.mustChangePassword).length}
               </div>
@@ -145,12 +215,22 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        {/* Section 1: Create Owner Account Form */}
+        {/* Section 1: Create New Venue from Scratch */}
         <section>
-          <CreateOwnerForm venues={venues} />
+          <CreateVenueForm categories={categories} owners={owners} />
         </section>
 
-        {/* Section 2: Provisioned Owners List */}
+        {/* Section 2: Create Owner Account Form (with + new venue option) */}
+        <section>
+          <CreateOwnerForm venues={venues} categories={categories} />
+        </section>
+
+        {/* Section 3: Registered Venues Management Table */}
+        <section>
+          <VenuesManagementTable initialVenues={allVenues} />
+        </section>
+
+        {/* Section 4: Provisioned Owners List */}
         <section className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8">
           <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-800">
             <div>

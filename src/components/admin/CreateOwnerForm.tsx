@@ -14,7 +14,8 @@ import {
   User,
   ShieldCheck,
   AlertCircle,
-  Share2,
+  PlusCircle,
+  Sparkles,
 } from "lucide-react";
 
 interface VenueOption {
@@ -24,8 +25,14 @@ interface VenueOption {
   district: string;
 }
 
+interface CategoryOption {
+  id: string;
+  nameAr: string;
+}
+
 interface CreateOwnerFormProps {
   venues: VenueOption[];
+  categories?: CategoryOption[];
 }
 
 function generateSecureTempPassword(): string {
@@ -37,12 +44,20 @@ function generateSecureTempPassword(): string {
   return pwd;
 }
 
-export function CreateOwnerForm({ venues }: CreateOwnerFormProps) {
+export function CreateOwnerForm({ venues, categories = [] }: CreateOwnerFormProps) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [tempPassword, setTempPassword] = useState(generateSecureTempPassword());
-  const [venueId, setVenueId] = useState(venues[0]?.id || "");
+  const [venueId, setVenueId] = useState(venues[0]?.id || "__new__");
+
+  // New venue quick fields
+  const [newVenueName, setNewVenueName] = useState("");
+  const [newVenueCategoryId, setNewVenueCategoryId] = useState(categories[0]?.id || "cat_weddings");
+  const [newVenueDistrict, setNewVenueDistrict] = useState("حي الروضة");
+  const [newVenueCapacity, setNewVenueCapacity] = useState("300");
+  const [newVenueEveningPrice, setNewVenueEveningPrice] = useState("150000");
+
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,20 +97,35 @@ export function CreateOwnerForm({ venues }: CreateOwnerFormProps) {
     formData.append("tempPassword", tempPassword);
     formData.append("venueId", venueId);
 
+    if (venueId === "__new__") {
+      formData.append("newVenueName", newVenueName);
+      formData.append("newVenueCategoryId", newVenueCategoryId);
+      formData.append("newVenueDistrict", newVenueDistrict);
+      formData.append("newVenueCapacity", newVenueCapacity);
+      formData.append("newVenueEveningPrice", newVenueEveningPrice);
+    }
+
     const res = await createOwnerByAdminAction(formData);
 
     if (res.success && res.data) {
       const selectedVenue = venues.find((v) => v.id === venueId);
+      const displayedVenueName =
+        venueId === "__new__"
+          ? newVenueName || "المنشأة الجديدة"
+          : selectedVenue?.name || "المنشأة";
+
       setCreatedData({
         fullName,
         identifier: phone || email,
         tempPassword,
-        venueName: selectedVenue ? selectedVenue.name : "المنشأة",
+        venueName: displayedVenueName,
       });
+
       // Reset form
       setFullName("");
       setEmail("");
       setPhone("");
+      setNewVenueName("");
       setTempPassword(generateSecureTempPassword());
       setLoading(false);
     } else {
@@ -114,7 +144,7 @@ export function CreateOwnerForm({ venues }: CreateOwnerFormProps) {
           </div>
           <h2 className="text-xl font-black text-white">إضافة مالك منشأة جديد</h2>
           <p className="text-xs text-slate-400 mt-1">
-            إنشاء حساب معتمد برقم الهاتف/البريد وكلمة مرور مؤقتة، وإجباره على تغييرها عند أول دخول
+            إنشاء حساب معتمد برقم الهاتف/البريد وكلمة مرور مؤقتة، وربطه بمنشأة حالية أو جديدة
           </p>
         </div>
 
@@ -133,7 +163,7 @@ export function CreateOwnerForm({ venues }: CreateOwnerFormProps) {
             <button
               type="button"
               onClick={() => setCreatedData(null)}
-              className="text-xs text-emerald-400/80 hover:text-emerald-300 underline"
+              className="text-xs text-emerald-400/80 hover:text-emerald-300 underline cursor-pointer"
             >
               إغلاق الإشعار
             </button>
@@ -157,7 +187,7 @@ export function CreateOwnerForm({ venues }: CreateOwnerFormProps) {
               <button
                 type="button"
                 onClick={() => handleCopyPassword(createdData.tempPassword)}
-                className="inline-flex items-center gap-1 text-[11px] bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded-lg transition"
+                className="inline-flex items-center gap-1 text-[11px] bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded-lg transition cursor-pointer"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? "تم النسخ" : "نسخ الرمز"}</span>
@@ -211,25 +241,108 @@ export function CreateOwnerForm({ venues }: CreateOwnerFormProps) {
               onChange={(e) => setVenueId(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-amber-400 transition cursor-pointer"
             >
-              {venues.length === 0 ? (
-                <option value="">لا توجد منشآت نشطة</option>
-              ) : (
-                venues.map((venue) => (
-                  <option key={venue.id} value={venue.id} className="bg-slate-900 text-white">
-                    {venue.name} ({venue.city} - {venue.district})
-                  </option>
-                ))
-              )}
+              <option value="__new__" className="bg-amber-950/90 text-amber-300 font-bold">
+                ✨ + إنشاء منشأة جديدة وربطها بهذا المالك فوراً
+              </option>
+              {venues.map((venue) => (
+                <option key={venue.id} value={venue.id} className="bg-slate-900 text-white">
+                  {venue.name} ({venue.city} - {venue.district})
+                </option>
+              ))}
             </select>
           </div>
         </div>
+
+        {/* Collapsible: Quick New Venue Creation Fields */}
+        {venueId === "__new__" && (
+          <div className="p-4 bg-amber-500/5 border border-amber-500/30 rounded-2xl space-y-4 animate-in fade-in duration-150">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>بيانات المنشأة الجديدة السريعة:</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] text-slate-300 mb-1">
+                  اسم المنشأة الجديدة <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required={venueId === "__new__"}
+                  value={newVenueName}
+                  onChange={(e) => setNewVenueName(e.target.value)}
+                  placeholder="مثال: شاليهات اللؤلؤة السياحية"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-300 mb-1">
+                  التصنيف <span className="text-rose-400">*</span>
+                </label>
+                <select
+                  value={newVenueCategoryId}
+                  onChange={(e) => setNewVenueCategoryId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400 transition cursor-pointer"
+                >
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-slate-900 text-white">
+                      {c.nameAr}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[11px] text-slate-300 mb-1">
+                  الحي / المنطقة في مأرب
+                </label>
+                <input
+                  type="text"
+                  value={newVenueDistrict}
+                  onChange={(e) => setNewVenueDistrict(e.target.value)}
+                  placeholder="مثال: حي الروضة"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-300 mb-1">
+                  السعة القصوى للضيوف
+                </label>
+                <input
+                  type="number"
+                  value={newVenueCapacity}
+                  onChange={(e) => setNewVenueCapacity(e.target.value)}
+                  placeholder="300"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-300 mb-1">
+                  السعر المسائي (ر.ي)
+                </label>
+                <input
+                  type="number"
+                  value={newVenueEveningPrice}
+                  onChange={(e) => setNewVenueEveningPrice(e.target.value)}
+                  placeholder="150000"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-amber-400 font-bold text-xs focus:outline-none focus:border-amber-400 transition"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Phone */}
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5 text-slate-400" />
-              <span>رقم الهاتف المعتمد</span>
+              <span>رقم الهاتف المعتمد للمالك</span>
               <span className="text-slate-500 text-[11px]">(مفضل للدخول السريع)</span>
             </label>
             <input
@@ -305,10 +418,10 @@ export function CreateOwnerForm({ venues }: CreateOwnerFormProps) {
         <div className="pt-2">
           <button
             type="submit"
-            disabled={loading || venues.length === 0}
+            disabled={loading}
             className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
-            {loading ? "جاري إنشاء الحساب وربط المنشأة..." : "إنشاء حساب المالك وتعيين كلمة المرور المؤقتة"}
+            {loading ? "جاري إنشاء الحساب والربط..." : "إنشاء حساب المالك وتعيين كلمة المرور المؤقتة"}
           </button>
         </div>
       </form>
