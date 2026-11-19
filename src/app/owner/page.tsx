@@ -52,76 +52,74 @@ interface RawVenueRow {
 export default async function OwnerDashboardPage() {
   const { user } = await requireOwnerOrAdmin();
 
-  // 1. جلب التصنيفات
-  const rawCategories = await client<[{ id: string; name_ar: string }]>`
-    SELECT id, name_ar FROM venue_categories ORDER BY display_order ASC
-  `;
+  // 1. جلب التصنيفات وقائمة المنشآت بالتوازي
+  const [rawCategories, venues] = await Promise.all([
+    client<[{ id: string; name_ar: string }]>`
+      SELECT id, name_ar FROM venue_categories ORDER BY display_order ASC
+    `,
+    user.role === "admin"
+      ? client<RawVenueRow[]>`
+          SELECT id, name, slug, status, city, district
+          FROM venues
+          WHERE deleted_at IS NULL
+          ORDER BY created_at DESC
+          LIMIT 10
+        `
+      : client<RawVenueRow[]>`
+          SELECT v.id, v.name, v.slug, v.status, v.city, v.district
+          FROM venues v
+          JOIN venue_members vm ON vm.venue_id = v.id
+          WHERE vm.user_id = ${user.id} AND v.deleted_at IS NULL
+          ORDER BY v.created_at DESC
+        `,
+  ]);
+
   const categories = rawCategories.map((c) => ({ id: c.id, nameAr: c.name_ar }));
-
-  // 2. استخراج معرفات المنشآت الخاصة بهذا المالك
-  let venues: RawVenueRow[] = [];
-  if (user.role === "admin") {
-    venues = await client<RawVenueRow[]>`
-      SELECT id, name, slug, status, city, district
-      FROM venues
-      WHERE deleted_at IS NULL
-      ORDER BY created_at DESC
-      LIMIT 10
-    `;
-  } else {
-    venues = await client<RawVenueRow[]>`
-      SELECT v.id, v.name, v.slug, v.status, v.city, v.district
-      FROM venues v
-      JOIN venue_members vm ON vm.venue_id = v.id
-      WHERE vm.user_id = ${user.id} AND v.deleted_at IS NULL
-      ORDER BY v.created_at DESC
-    `;
-  }
-
   const venueIds = venues.map((v) => v.id);
 
-  // 2. جلب الحجوزات والإحصائيات
+  // 2. جلب الحجوزات المعلقة وإحصائيات الحجوزات المؤكدة بالتوازي
   let pendingBookings: RawBookingRow[] = [];
   let confirmedCount = 0;
   let totalRevenue = 0;
 
   if (venueIds.length > 0) {
-    // الحجوزات المعلقة
-    pendingBookings = await client<RawBookingRow[]>`
-      SELECT 
-        b.id,
-        b.booking_reference,
-        b.venue_id,
-        b.customer_id,
-        b.event_date,
-        b.shift,
-        b.guest_count,
-        b.status,
-        b.total_amount,
-        b.deposit_amount,
-        b.customer_notes,
-        b.created_at,
-        v.name as venue_name,
-        u.full_name as customer_name,
-        COALESCE(u.phone, '') as customer_phone
-      FROM bookings b
-      JOIN venues v ON v.id = b.venue_id
-      LEFT JOIN users u ON u.id = b.customer_id
-      WHERE b.venue_id = ANY(${venueIds})
-        AND b.status IN ('pending_owner_approval', 'pending_payment')
-      ORDER BY b.created_at DESC
-    `;
+    const [pendingRows, confirmedStatsRows] = await Promise.all([
+      client<RawBookingRow[]>`
+        SELECT 
+          b.id,
+          b.booking_reference,
+          b.venue_id,
+          b.customer_id,
+          b.event_date,
+          b.shift,
+          b.guest_count,
+          b.status,
+          b.total_amount,
+          b.deposit_amount,
+          b.customer_notes,
+          b.created_at,
+          v.name as venue_name,
+          u.full_name as customer_name,
+          COALESCE(u.phone, '') as customer_phone
+        FROM bookings b
+        JOIN venues v ON v.id = b.venue_id
+        LEFT JOIN users u ON u.id = b.customer_id
+        WHERE b.venue_id = ANY(${venueIds})
+          AND b.status IN ('pending_owner_approval', 'pending_payment')
+        ORDER BY b.created_at DESC
+      `,
+      client<[{ count: string; total: string }?]>`
+        SELECT 
+          COUNT(*)::text as count,
+          COALESCE(SUM(total_amount), 0)::text as total
+        FROM bookings
+        WHERE venue_id = ANY(${venueIds})
+          AND status = 'confirmed'
+      `,
+    ]);
 
-    // إحصائيات الحجوزات المؤكدة
-    const [confirmedStats] = await client<[{ count: string; total: string }?]>`
-      SELECT 
-        COUNT(*)::text as count,
-        COALESCE(SUM(total_amount), 0)::text as total
-      FROM bookings
-      WHERE venue_id = ANY(${venueIds})
-        AND status = 'confirmed'
-    `;
-
+    pendingBookings = pendingRows;
+    const confirmedStats = confirmedStatsRows[0];
     if (confirmedStats) {
       confirmedCount = parseInt(confirmedStats.count || "0", 10);
       totalRevenue = parseFloat(confirmedStats.total || "0");
@@ -246,6 +244,7 @@ export default async function OwnerDashboardPage() {
       <div className="grid grid-cols-2 gap-2">
         <Link
           href="/owner/calendar"
+          prefetch={true}
           className="flex items-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/20 hover:border-amber-500/40 text-amber-800 dark:text-amber-400 transition active:scale-95"
         >
           <CalendarDays className="w-4 h-4 shrink-0 text-amber-700 dark:text-amber-400" />
@@ -257,6 +256,7 @@ export default async function OwnerDashboardPage() {
 
         <Link
           href="/owner/venues"
+          prefetch={true}
           className="flex items-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-indigo-500/10 to-indigo-600/10 border border-indigo-500/20 hover:border-indigo-500/40 text-indigo-800 dark:text-indigo-400 transition active:scale-95"
         >
           <Sparkles className="w-4 h-4 shrink-0 text-indigo-700 dark:text-indigo-400" />
@@ -276,6 +276,7 @@ export default async function OwnerDashboardPage() {
           </h3>
           <Link
             href="/owner/venues"
+            prefetch={true}
             className="text-[11px] font-semibold text-amber-800 dark:text-amber-400 flex items-center gap-0.5 hover:underline"
           >
             <span>إدارة وتعديل</span>
@@ -334,6 +335,7 @@ export default async function OwnerDashboardPage() {
           </h3>
           <Link
             href="/owner/bookings"
+            prefetch={true}
             className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-0.5 hover:text-slate-800 dark:hover:text-slate-200"
           >
             <span>كل الحجوزات</span>

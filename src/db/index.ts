@@ -49,10 +49,9 @@ export const client =
 
 export const db = globalForDb.db ?? drizzle(client, { schema });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.client = client;
-  globalForDb.db = db;
-}
+// حفظ نسخة العميل في globalThis في وضع التطوير والإنتاج لمنع إعادة فتح اتصالات SSL جديدة
+globalForDb.client = client;
+globalForDb.db = db;
 
 export const sqlite: any = null;
 

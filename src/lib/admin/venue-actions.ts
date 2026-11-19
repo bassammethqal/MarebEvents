@@ -2,7 +2,7 @@
 
 import { client } from "@/db";
 import { requireAdmin } from "@/lib/auth/guards";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import crypto from "crypto";
 
 export interface ActionResult<T = unknown> {
@@ -162,6 +162,7 @@ export async function createVenueByAdminAction(
       }
     });
 
+    revalidateTag("venues", { expire: 0 });
     revalidatePath("/admin");
     revalidatePath("/explore");
     revalidatePath("/");
@@ -200,6 +201,7 @@ export async function toggleVenueStatusAction(
       WHERE id = ${venueId}
     `;
 
+    revalidateTag("venues", { expire: 0 });
     revalidatePath("/admin");
     revalidatePath("/explore");
     revalidatePath("/");
@@ -228,6 +230,7 @@ export async function deleteVenueAction(
       await sql`DELETE FROM venues WHERE id = ${venueId}`;
     });
 
+    revalidateTag("venues", { expire: 0 });
     revalidatePath("/admin");
     revalidatePath("/explore");
     revalidatePath("/");

@@ -2,7 +2,7 @@
 
 import { client } from "@/db";
 import { requireOwnerOrAdmin } from "@/lib/auth/guards";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import crypto from "crypto";
 
 export interface ActionResult<T = unknown> {
@@ -442,6 +442,7 @@ export async function updateOwnerVenueSettingsAction(
       await upsertShiftPrice("full_day", fullDayPrice);
     });
 
+    revalidateTag("venues", { expire: 0 });
     revalidatePath("/owner");
     revalidatePath("/owner/venues");
     revalidatePath("/explore");
@@ -606,6 +607,7 @@ export async function createVenueByOwnerAction(
       `;
     });
 
+    revalidateTag("venues", { expire: 0 });
     revalidatePath("/owner");
     revalidatePath("/owner/venues");
     revalidatePath("/owner/calendar");

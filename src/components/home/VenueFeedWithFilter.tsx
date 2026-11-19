@@ -196,7 +196,7 @@ export function VenueFeedWithFilter({
 
                   {/* Card Content */}
                   <div className="p-4 text-right">
-                    <Link href={`/venues/${venue.slug}`}>
+                    <Link href={`/venues/${venue.slug}`} prefetch={true}>
                       <h3 className="font-bold text-base text-slate-900 dark:text-white leading-snug hover:text-amber-600 transition">
                         {venue.name}
                       </h3>
@@ -229,6 +229,7 @@ export function VenueFeedWithFilter({
 
                       <Link
                         href={`/venues/${venue.slug}`}
+                        prefetch={true}
                         className="bg-slate-900 dark:bg-amber-500 hover:bg-slate-800 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs active:scale-95"
                       >
                         احجز الآن

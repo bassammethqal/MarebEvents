@@ -2,6 +2,7 @@ import { db, schema } from "@/db";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { signSessionToken, verifySignedSessionToken } from "./cookie-signer";
 
 export const SESSION_COOKIE_NAME = "mareb_session";
@@ -67,11 +68,11 @@ export async function createSession(
 
 /**
  * التحقق من صلاحية الجلسة باستخدام الرمز الخام أو القيمة الموقعة
- * ومطابقة البصمة المشفرة في قاعدة البيانات
+ * ومطابقة البصمة المشفرة في قاعدة البيانات (Memoized عبر React cache لمنع التكرار)
  */
-export async function validateSession(
+export const validateSession = cache(async (
   tokenOrSignedValue: string
-): Promise<{ session: schema.Session; user: SafeUser } | null> {
+): Promise<{ session: schema.Session; user: SafeUser } | null> => {
   if (!tokenOrSignedValue || typeof tokenOrSignedValue !== "string") {
     return null;
   }
@@ -126,7 +127,7 @@ export async function validateSession(
     session,
     user: sanitizeUser(user),
   };
-}
+});
 
 /**
  * إبطال وحذف جلسة محددة عبر الرمز الخام أو القيمة الموقعة
@@ -206,12 +207,12 @@ export async function removeSessionCookie(): Promise<void> {
 }
 
 /**
- * استخراج والتحقق من الجلسة الحالية من الـ Cookies
+ * استخراج والتحقق من الجلسة الحالية من الـ Cookies (Memoized عبر React cache لكل طلب)
  */
-export async function getCurrentSession(): Promise<{
+export const getCurrentSession = cache(async (): Promise<{
   session: schema.Session;
   user: SafeUser;
-} | null> {
+} | null> => {
   try {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
@@ -222,4 +223,4 @@ export async function getCurrentSession(): Promise<{
   } catch {
     return null;
   }
-}
+});

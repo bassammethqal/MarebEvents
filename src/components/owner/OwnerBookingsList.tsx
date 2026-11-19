@@ -91,15 +91,19 @@ export function OwnerBookingsList({ bookings: initialBookings }: OwnerBookingsLi
     setActionType("approving");
     setFeedback(null);
 
+    // تحديث تفاؤلي فوري (0ms Latency)
+    const previousBookings = bookings;
+    setBookings((prev) =>
+      prev.map((b) => (b.id === booking.id ? { ...b, status: "confirmed" } : b))
+    );
+
     const res = await approveOwnerBookingAction(booking.id);
 
     if (res.success) {
-      setBookings((prev) =>
-        prev.map((b) => (b.id === booking.id ? { ...b, status: "confirmed" } : b))
-      );
       setFeedback({ type: "success", message: `تم تأكيد حجز (${booking.bookingReference}) بنجاح!` });
       router.refresh();
     } else {
+      setBookings(previousBookings);
       setFeedback({ type: "error", message: res.error || "فشل تأكيد الحجز." });
     }
 
@@ -115,27 +119,32 @@ export function OwnerBookingsList({ bookings: initialBookings }: OwnerBookingsLi
 
   const confirmReject = async () => {
     if (!targetBooking) return;
-    setActiveBookingId(targetBooking.id);
+    const target = targetBooking;
+    setActiveBookingId(target.id);
     setActionType("rejecting");
     setRejectModalOpen(false);
     setFeedback(null);
 
-    const res = await rejectOwnerBookingAction(targetBooking.id, rejectReason);
+    // تحديث تفاؤلي فوري (0ms Latency)
+    const previousBookings = bookings;
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === target.id
+          ? { ...b, status: "cancelled_by_owner", cancellationReason: rejectReason }
+          : b
+      )
+    );
+
+    const res = await rejectOwnerBookingAction(target.id, rejectReason);
 
     if (res.success) {
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.id === targetBooking.id
-            ? { ...b, status: "cancelled_by_owner", cancellationReason: rejectReason }
-            : b
-        )
-      );
       setFeedback({
         type: "success",
-        message: `تم رفض حجز (${targetBooking.bookingReference}) وتحرير الفترة.`,
+        message: `تم رفض حجز (${target.bookingReference}) وتحرير الفترة.`,
       });
       router.refresh();
     } else {
+      setBookings(previousBookings);
       setFeedback({ type: "error", message: res.error || "فشل رفض الحجز." });
     }
 

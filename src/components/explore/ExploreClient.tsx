@@ -236,7 +236,7 @@ export function ExploreClient({ venues, favoriteVenueIds }: ExploreClientProps) 
                 >
                   {/* Image Container with Badge & Heart */}
                   <div className="relative h-44 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <Link href={`/venues/${venue.slug}`} className="block w-full h-full">
+                    <Link href={`/venues/${venue.slug}`} prefetch={true} className="block w-full h-full">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={
@@ -265,7 +265,7 @@ export function ExploreClient({ venues, favoriteVenueIds }: ExploreClientProps) 
 
                   {/* Card Content */}
                   <div className="p-4 text-right">
-                    <Link href={`/venues/${venue.slug}`}>
+                    <Link href={`/venues/${venue.slug}`} prefetch={true}>
                       <h3 className="font-bold text-base text-slate-900 dark:text-white leading-snug hover:text-amber-600 transition">
                         {venue.name}
                       </h3>
@@ -298,6 +298,7 @@ export function ExploreClient({ venues, favoriteVenueIds }: ExploreClientProps) 
 
                       <Link
                         href={`/venues/${venue.slug}`}
+                        prefetch={true}
                         className="bg-slate-900 dark:bg-amber-500 hover:bg-slate-800 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs active:scale-95"
                       >
                         احجز الآن

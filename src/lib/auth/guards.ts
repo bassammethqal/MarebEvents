@@ -1,5 +1,6 @@
 import { getCurrentSession, type SafeUser } from "./session";
 import { schema } from "@/db";
+import { cache } from "react";
 
 export class AuthError extends Error {
   statusCode: number;
@@ -11,18 +12,18 @@ export class AuthError extends Error {
 }
 
 /**
- * فحص تسجيل الدخول الإجباري (Authentication Guard)
+ * فحص تسجيل الدخول الإجباري (Authentication Guard) - Memoized لكل طلب
  */
-export async function requireAuth(): Promise<{
+export const requireAuth = cache(async (): Promise<{
   user: SafeUser;
   session: schema.Session;
-}> {
+}> => {
   const current = await getCurrentSession();
   if (!current) {
     throw new AuthError("غير مصرح لك. يرجى تسجيل الدخول أولاً.", 401);
   }
   return current;
-}
+});
 
 /**
  * فحص الصلاحيات والأدوار الإجباري (Role-Based Access Control Guard)

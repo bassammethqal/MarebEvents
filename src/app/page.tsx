@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
 import { logoutAction } from "@/lib/auth/actions";
-import { client } from "@/db";
+import { getCachedActiveVenues } from "@/lib/venues/cached";
 import { getUserFavoriteIds } from "@/lib/favorites/actions";
 import { MessageCircle } from "lucide-react";
 import { Pin3D, Wedding3D } from "@/components/ui/Icons3D";
@@ -14,35 +14,6 @@ import {
 } from "@/components/home/VenueFeedWithFilter";
 
 export const instant = false;
-
-async function getFeaturedVenues(): Promise<VenueItem[]> {
-  try {
-    const rows = await client<VenueItem[]>`
-      SELECT 
-        v.id,
-        v.name,
-        v.slug,
-        v.description,
-        v.city,
-        v.district,
-        v.contact_phone,
-        v.contact_whatsapp,
-        v.default_currency,
-        c.name_ar as category_name,
-        (SELECT image_url FROM venue_images WHERE venue_id = v.id AND is_cover = true LIMIT 1) as cover_image,
-        (SELECT MIN(price) FROM pricing_tiers WHERE venue_id = v.id AND shift = 'evening') as starting_price,
-        (SELECT MAX(capacity_max) FROM venue_units WHERE venue_id = v.id) as max_capacity
-      FROM venues v
-      LEFT JOIN venue_categories c ON c.id = v.category_id
-      WHERE v.status = 'active'
-      ORDER BY v.featured DESC, v.created_at DESC
-    `;
-    return rows;
-  } catch (error) {
-    console.error("Failed to load featured venues:", error);
-    return [];
-  }
-}
 
 async function UserStatusHeader() {
   const current = await getCurrentSession();
@@ -83,13 +54,11 @@ async function UserStatusHeader() {
 }
 
 export default async function HomePage() {
-  const [venues, session] = await Promise.all([
-    getFeaturedVenues(),
-    getCurrentSession(),
+  const session = await getCurrentSession();
+  const [venues, favoriteVenueIds] = await Promise.all([
+    getCachedActiveVenues(),
+    session?.user ? getUserFavoriteIds(session.user.id) : Promise.resolve([]),
   ]);
-  const favoriteVenueIds = session?.user
-    ? await getUserFavoriteIds(session.user.id)
-    : [];
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col selection:bg-amber-500/20 selection:text-amber-900 scroll-smooth">
