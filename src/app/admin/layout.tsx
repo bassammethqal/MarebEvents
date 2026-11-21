@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { requireAdmin } from "@/lib/auth/guards";
 import { redirect } from "next/navigation";
+import { InstallAppPrompt } from "@/components/pwa/InstallAppPrompt";
 
 export const instant = false;
 
@@ -33,6 +34,7 @@ export default async function AdminLayout({
         <span className="text-slate-400 font-mono text-[11px]">مأرب إيفنتس</span>
       </header>
       <main className="p-4 sm:p-6">{children}</main>
+      <InstallAppPrompt variant="admin" />
     </div>
   );
 }

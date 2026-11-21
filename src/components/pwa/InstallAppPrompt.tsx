@@ -27,7 +27,7 @@ declare global {
 }
 
 interface InstallAppPromptProps {
-  variant?: "customer" | "owner";
+  variant?: "customer" | "owner" | "admin";
 }
 
 export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps) {
@@ -38,6 +38,7 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
   const [showInstructions, setShowInstructions] = useState<"none" | "ios" | "manual">("none");
   const [copied, setCopied] = useState(false);
 
+  const isAdmin = variant === "admin";
   const isOwner = variant === "owner";
   const storageKey = `mareb_pwa_dismissed_${variant}`;
 
@@ -163,10 +164,16 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
     return null;
   }
 
-  const title = isOwner ? "ثبّت تطبيق إدارة المنشآت" : "ثبّت تطبيق مأرب إيفنتس على هاتفك";
-  const desc = isOwner
-    ? "أدِر حجوزات قاعتك واستقبل طلبات الزبائن كتطبيق مستقل وسريع"
-    : "وصول فوري للقاعات والاستراحات وتحديثات الحجز المباشرة";
+  let title = "ثبّت تطبيق مأرب إيفنتس على هاتفك";
+  let desc = "وصول فوري للقاعات والاستراحات وتحديثات الحجز المباشرة";
+
+  if (isAdmin) {
+    title = "ثبّت لوحة تحكم الإدارة";
+    desc = "وصول مباشر وسريع لإدارة المنصة وحسابات الملاك ومراقبة الحجوزات";
+  } else if (isOwner) {
+    title = "ثبّت تطبيق إدارة المنشآت";
+    desc = "أدِر حجوزات قاعتك واستقبل طلبات الزبائن كتطبيق مستقل وسريع";
+  }
 
   return (
     <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full max-w-[420px] px-3.5 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300 pointer-events-auto">
@@ -186,7 +193,11 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
 
         {/* معلومات التطبيق */}
         <div className="flex items-start gap-3 pl-6">
-          {isOwner ? (
+          {isAdmin ? (
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-amber-500/20 shrink-0">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+          ) : isOwner ? (
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black text-xl shadow-lg shadow-amber-500/20 shrink-0">
               <Building2 className="w-6 h-6 text-slate-950" />
             </div>
