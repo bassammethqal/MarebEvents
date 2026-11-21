@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { requireOwnerOrAdmin } from "@/lib/auth/guards";
 import { redirect } from "next/navigation";
@@ -7,6 +8,10 @@ import { OwnerTopAppBar } from "@/components/owner/OwnerTopAppBar";
 import { InstallAppPrompt } from "@/components/pwa/InstallAppPrompt";
 
 export const instant = false;
+
+export const metadata: Metadata = {
+  manifest: "/owner/manifest.webmanifest",
+};
 
 export default async function OwnerLayout({
   children,
