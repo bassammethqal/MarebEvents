@@ -12,6 +12,7 @@ import {
   MoreVertical,
   Check,
   Copy,
+  ExternalLink,
 } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -75,7 +76,7 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
     setIsIOS(isIosDevice);
 
     const inApp =
-      /instagram|fbav|fban|messenger|whatsapp|snapchat|line|micromessenger/.test(ua);
+      /instagram|fbav|fban|messenger|whatsapp|snapchat|line|micromessenger|telegram/.test(ua);
     setIsInAppBrowser(inApp);
 
     // 5. استعادة الحدث المبكر إذا كان المتصفح قد أطلقه قبل اكتمال تحميل المكون
@@ -120,6 +121,13 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
   }, [storageKey]);
 
   const handleInstallClick = async () => {
+    // إذا كان المتصفح الداخلي لتطبيقات المراسلة (واتساب / تليجرام / فيسبوك)
+    if (isInAppBrowser) {
+      handleCopyLink();
+      setShowInstructions("manual");
+      return;
+    }
+
     // إذا كان الحدث التلقائي متاحاً (Android / Desktop Chrome / Edge)
     if (deferredPrompt) {
       try {
@@ -142,7 +150,7 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
       return;
     }
 
-    // إذا كان متصفح أندرويد دون توفر الحدث المباشر أو متصفح داخلي
+    // إذا كان متصفح أندرويد دون توفر الحدث المباشر
     setShowInstructions((prev) => (prev === "manual" ? "none" : "manual"));
   };
 
@@ -223,8 +231,31 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
           </div>
         </div>
 
+        {/* تنبيه في حال تم فتح الرابط من داخل تطبيق واتساب / تليجرام */}
+        {isInAppBrowser && (
+          <div className="mt-3.5 p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/30 space-y-2 text-xs text-amber-950 dark:text-amber-200">
+            <div className="flex items-center justify-between">
+              <span className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                <ExternalLink className="w-3.5 h-3.5" />
+                تتصفح من داخل تطبيق محادثة
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition cursor-pointer"
+              >
+                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                <span>{copied ? "تم النسخ" : "نسخ الرابط"}</span>
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-normal">
+              لتثبيت التطبيق على جهازك: اضغط على النقاط الثلاث <strong className="text-amber-600 dark:text-amber-400 font-bold">(⋮)</strong> بالزاوية واختر <strong className="text-amber-600 dark:text-amber-400 font-bold">&quot;فتح في Chrome&quot;</strong> أو <strong className="text-amber-600 dark:text-amber-400 font-bold">&quot;فتح في Safari&quot;</strong>.
+            </p>
+          </div>
+        )}
+
         {/* إرشادات أجهزة آيفون (iOS Safari) */}
-        {showInstructions === "ios" && (
+        {!isInAppBrowser && showInstructions === "ios" && (
           <div className="mt-3.5 p-3 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 space-y-2 text-xs text-amber-950 dark:text-amber-200 animate-in fade-in duration-200">
             <div className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
               <Smartphone className="w-3.5 h-3.5" />
@@ -306,7 +337,11 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
           >
             <Download className="w-3.5 h-3.5 text-slate-950" />
             <span>
-              {deferredPrompt
+              {isInAppBrowser
+                ? copied
+                  ? "تم نسخ الرابط بنجاح"
+                  : "نسخ الرابط لفتحه في Chrome"
+                : deferredPrompt
                 ? "تثبيت التطبيق الآن"
                 : isIOS
                 ? "طريقة التثبيت على آيفون"

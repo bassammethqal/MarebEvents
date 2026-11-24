@@ -13,9 +13,14 @@ export default async function AdminLayout({
   const headerList = await headers();
   const pathname = headerList.get("x-pathname") || "";
 
-  // استثناء صفحة تسجيل دخول الإدارة حتى تفتح بحرية بدون فرض الحارس
+  // استثناء صفحة تسجيل دخول الإدارة حتى تفتح بحرية بدون فرض الحارس مع إظهار إشعار التثبيت
   if (pathname.includes("/admin/login")) {
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+        <InstallAppPrompt variant="admin" />
+      </>
+    );
   }
 
   try {

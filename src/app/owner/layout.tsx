@@ -21,9 +21,14 @@ export default async function OwnerLayout({
   const headerList = await headers();
   const pathname = headerList.get("x-pathname") || "";
 
-  // إذا كان المسار هو صفحة تسجيل الدخول، اعرضها مباشرة دون فرض الجلسة أو الشريط
+  // إذا كان المسار هو صفحة تسجيل الدخول، اعرضها مباشرة دون فرض الجلسة أو الشريط مع إظهار إشعار التثبيت
   if (pathname.includes("/owner/login")) {
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+        <InstallAppPrompt variant="owner" />
+      </>
+    );
   }
 
   let user;
