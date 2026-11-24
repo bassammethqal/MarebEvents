@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { requireAdmin } from "@/lib/auth/guards";
 import { redirect } from "next/navigation";
 import { InstallAppPrompt } from "@/components/pwa/InstallAppPrompt";
 
 export const instant = false;
+
+export const metadata: Metadata = {
+  manifest: "/manifest.webmanifest",
+};
 
 export default async function AdminLayout({
   children,

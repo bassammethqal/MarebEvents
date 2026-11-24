@@ -62,12 +62,6 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
       return;
     }
 
-    // 3. فحص ما إذا تم إغلاقه خلال هذه الجلسة
-    const isDismissed = sessionStorage.getItem(storageKey);
-    if (isDismissed === "true") {
-      return;
-    }
-
     // 4. فحص نوع الجهاز والمتصفح
     const ua = window.navigator.userAgent.toLowerCase();
     const isIosDevice =
@@ -82,6 +76,7 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
     // 5. استعادة الحدث المبكر إذا كان المتصفح قد أطلقه قبل اكتمال تحميل المكون
     if (window.__pwaPrompt) {
       setDeferredPrompt(window.__pwaPrompt);
+      setShowPrompt(true);
     }
 
     // 6. الاستماع لأي حدث جديد يطلقه المتصفح
@@ -107,10 +102,10 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
     window.addEventListener("appinstalled", handleAppInstalled);
 
-    // 7. ضمان ظهور البطاقة بعد 1.5 ثانية لأي زائر لم يثبت التطبيق
+    // 7. إظهار البطاقة سريعاً بعد ثانية واحدة لجميع الأجهزة والهواتف
     const timer = setTimeout(() => {
       setShowPrompt(true);
-    }, 1500);
+    }, 1000);
 
     return () => {
       clearTimeout(timer);
@@ -118,7 +113,7 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
       window.removeEventListener("appinstalled", handleAppInstalled);
       delete window.__pwaHandler;
     };
-  }, [storageKey]);
+  }, []);
 
   const handleInstallClick = async () => {
     // إذا كان المتصفح الداخلي لتطبيقات المراسلة (واتساب / تليجرام / فيسبوك)
@@ -157,7 +152,6 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
   const handleDismiss = () => {
     setShowPrompt(false);
     setShowInstructions("none");
-    sessionStorage.setItem(storageKey, "true");
   };
 
   const handleCopyLink = () => {
@@ -184,8 +178,8 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
   }
 
   return (
-    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full max-w-[420px] px-3.5 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300 pointer-events-auto">
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-amber-500/40 dark:border-amber-500/30 rounded-3xl p-4 shadow-2xl shadow-slate-950/30 relative overflow-hidden transition-all text-right">
+    <div className="fixed bottom-24 sm:bottom-6 inset-x-3.5 mx-auto w-auto max-w-[420px] z-[9999] pointer-events-auto animate-in fade-in duration-300">
+      <div className="bg-white/98 dark:bg-slate-900/98 backdrop-blur-2xl border border-amber-500/40 dark:border-amber-500/30 rounded-3xl p-4 shadow-[0_16px_40px_rgba(0,0,0,0.35)] relative overflow-hidden transition-all text-right">
         {/* Glow Accent */}
         <div className="absolute -top-12 -right-12 w-28 h-28 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
 
