@@ -1,19 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Download,
-  X,
-  Share2,
-  PlusSquare,
-  Building2,
-  Sparkles,
-  Smartphone,
-  MoreVertical,
-  Check,
-  Copy,
-  ExternalLink,
-} from "lucide-react";
+import { Download, X, Building2, Sparkles } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -34,24 +22,19 @@ interface InstallAppPromptProps {
 export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
-  const [showInstructions, setShowInstructions] = useState<"none" | "ios" | "manual">("none");
-  const [copied, setCopied] = useState(false);
 
   const isAdmin = variant === "admin";
   const isOwner = variant === "owner";
-  const storageKey = `mareb_pwa_dismissed_${variant}`;
 
   useEffect(() => {
-    // 1. تسجيل الـ Service Worker
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+    if (typeof window === "undefined") return;
+
+    // 1. تسجيل الـ Service Worker في حال لم يكن مسجلاً
+    if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
         .catch((err) => console.warn("PWA SW registration:", err));
     }
-
-    if (typeof window === "undefined") return;
 
     // 2. فحص ما إذا كان التطبيق مثبتاً ويعمل كـ Standalone App
     const isStandalone =
@@ -62,24 +45,13 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
       return;
     }
 
-    // 4. فحص نوع الجهاز والمتصفح
-    const ua = window.navigator.userAgent.toLowerCase();
-    const isIosDevice =
-      /iphone|ipad|ipod/.test(ua) ||
-      (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
-    setIsIOS(isIosDevice);
-
-    const inApp =
-      /instagram|fbav|fban|messenger|whatsapp|snapchat|line|micromessenger|telegram/.test(ua);
-    setIsInAppBrowser(inApp);
-
-    // 5. استعادة الحدث المبكر إذا كان المتصفح قد أطلقه قبل اكتمال تحميل المكون
+    // 3. استعادة الحدث المبكر إذا أطلقه المتصفح قبل اكتمال تحميل المكون
     if (window.__pwaPrompt) {
       setDeferredPrompt(window.__pwaPrompt);
       setShowPrompt(true);
     }
 
-    // 6. الاستماع لأي حدث جديد يطلقه المتصفح
+    // 4. الاستماع لحدث التثبيت المباشر من المتصفح
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
@@ -102,13 +74,7 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
     window.addEventListener("appinstalled", handleAppInstalled);
 
-    // 7. إظهار البطاقة سريعاً بعد ثانية واحدة لجميع الأجهزة والهواتف
-    const timer = setTimeout(() => {
-      setShowPrompt(true);
-    }, 1000);
-
     return () => {
-      clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
       window.removeEventListener("appinstalled", handleAppInstalled);
       delete window.__pwaHandler;
@@ -116,53 +82,26 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
   }, []);
 
   const handleInstallClick = async () => {
-    // إذا كان المتصفح الداخلي لتطبيقات المراسلة (واتساب / تليجرام / فيسبوك)
-    if (isInAppBrowser) {
-      handleCopyLink();
-      setShowInstructions("manual");
-      return;
-    }
+    if (!deferredPrompt) return;
 
-    // إذا كان الحدث التلقائي متاحاً (Android / Desktop Chrome / Edge)
-    if (deferredPrompt) {
-      try {
-        await deferredPrompt.prompt();
-        const choice = await deferredPrompt.userChoice;
-        if (choice.outcome === "accepted") {
-          setShowPrompt(false);
-        }
-        setDeferredPrompt(null);
-        window.__pwaPrompt = undefined;
-        return;
-      } catch (err) {
-        console.warn("Prompt error:", err);
+    try {
+      await deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === "accepted") {
+        setShowPrompt(false);
       }
+      setDeferredPrompt(null);
+      window.__pwaPrompt = undefined;
+    } catch (err) {
+      console.warn("Prompt error:", err);
     }
-
-    // إذا كان جهاز آيفون
-    if (isIOS) {
-      setShowInstructions((prev) => (prev === "ios" ? "none" : "ios"));
-      return;
-    }
-
-    // إذا كان متصفح أندرويد دون توفر الحدث المباشر
-    setShowInstructions((prev) => (prev === "manual" ? "none" : "manual"));
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    setShowInstructions("none");
   };
 
-  const handleCopyLink = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  if (!showPrompt) {
+  if (!showPrompt || !deferredPrompt) {
     return null;
   }
 
@@ -225,103 +164,6 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
           </div>
         </div>
 
-        {/* تنبيه في حال تم فتح الرابط من داخل تطبيق واتساب / تليجرام */}
-        {isInAppBrowser && (
-          <div className="mt-3.5 p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/30 space-y-2 text-xs text-amber-950 dark:text-amber-200">
-            <div className="flex items-center justify-between">
-              <span className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
-                <ExternalLink className="w-3.5 h-3.5" />
-                تتصفح من داخل تطبيق محادثة
-              </span>
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition cursor-pointer"
-              >
-                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                <span>{copied ? "تم النسخ" : "نسخ الرابط"}</span>
-              </button>
-            </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-normal">
-              لتثبيت التطبيق على جهازك: اضغط على النقاط الثلاث <strong className="text-amber-600 dark:text-amber-400 font-bold">(⋮)</strong> بالزاوية واختر <strong className="text-amber-600 dark:text-amber-400 font-bold">&quot;فتح في Chrome&quot;</strong> أو <strong className="text-amber-600 dark:text-amber-400 font-bold">&quot;فتح في Safari&quot;</strong>.
-            </p>
-          </div>
-        )}
-
-        {/* إرشادات أجهزة آيفون (iOS Safari) */}
-        {!isInAppBrowser && showInstructions === "ios" && (
-          <div className="mt-3.5 p-3 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 space-y-2 text-xs text-amber-950 dark:text-amber-200 animate-in fade-in duration-200">
-            <div className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>طريقة التثبيت على آيفون (Safari):</span>
-            </div>
-            <div className="space-y-1.5 text-[11px] text-slate-700 dark:text-slate-300 leading-normal">
-              <div className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold text-[10px] flex items-center justify-center shrink-0">
-                  1
-                </span>
-                <span>
-                  اضغط على زر المشاركة{" "}
-                  <Share2 className="w-3.5 h-3.5 inline mx-0.5 text-amber-600 dark:text-amber-400" />{" "}
-                  في شريط Safari بالأسفل.
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold text-[10px] flex items-center justify-center shrink-0">
-                  2
-                </span>
-                <span>
-                  مرر للأسفل واختر{" "}
-                  <strong className="text-amber-700 dark:text-amber-300 font-bold inline-flex items-center gap-0.5">
-                    <PlusSquare className="w-3 h-3 inline" /> (إضافة إلى الشاشة الرئيسية)
-                  </strong>.
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* إرشادات التثبيت اليدوي لأندرويد والمتصفحات الداخلية */}
-        {showInstructions === "manual" && (
-          <div className="mt-3.5 p-3 rounded-2xl bg-blue-50/90 dark:bg-slate-800/80 border border-blue-200 dark:border-slate-700 space-y-2 text-xs text-slate-800 dark:text-slate-200 animate-in fade-in duration-200">
-            <div className="font-bold flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
-              <MoreVertical className="w-3.5 h-3.5" />
-              <span>خطوات تثبيت التطبيق:</span>
-            </div>
-            <div className="space-y-1.5 text-[11px] text-slate-600 dark:text-slate-300 leading-normal">
-              <div className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300 font-bold text-[10px] flex items-center justify-center shrink-0">
-                  1
-                </span>
-                <span>اضغط على قائمة المتصفح (⋮) في أعلى أو أسفل الشاشة.</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300 font-bold text-[10px] flex items-center justify-center shrink-0">
-                  2
-                </span>
-                <span>
-                  اختر <strong className="text-blue-600 dark:text-blue-400">تثبيت التطبيق</strong> أو{" "}
-                  <strong className="text-blue-600 dark:text-blue-400">إضافة إلى الشاشة الرئيسية</strong>.
-                </span>
-              </div>
-            </div>
-
-            {isInAppBrowser && (
-              <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <span className="text-[10px] text-slate-500">لأفضل تجربة، افتح الرابط في Chrome:</span>
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
-                >
-                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  <span>{copied ? "تم النسخ" : "نسخ الرابط"}</span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* أزرار الإجراء */}
         <div className="mt-3.5 flex items-center gap-2">
           <button
@@ -330,17 +172,7 @@ export function InstallAppPrompt({ variant = "customer" }: InstallAppPromptProps
             className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-slate-950" />
-            <span>
-              {isInAppBrowser
-                ? copied
-                  ? "تم نسخ الرابط بنجاح"
-                  : "نسخ الرابط لفتحه في Chrome"
-                : deferredPrompt
-                ? "تثبيت التطبيق الآن"
-                : isIOS
-                ? "طريقة التثبيت على آيفون"
-                : "تثبيت التطبيق"}
-            </span>
+            <span>تثبيت التطبيق الآن</span>
           </button>
 
           <button

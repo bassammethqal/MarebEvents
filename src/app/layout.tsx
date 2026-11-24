@@ -80,7 +80,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}catch(e){}})();window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pwaPrompt=e;if(typeof window.__pwaHandler==='function'){window.__pwaHandler(e);}});`,
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}catch(e){}})();if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){});}window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pwaPrompt=e;if(typeof window.__pwaHandler==='function'){window.__pwaHandler(e);}});`,
           }}
         />
       </head>
