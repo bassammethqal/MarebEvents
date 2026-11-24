@@ -1,11 +1,12 @@
-import type { MetadataRoute } from "next";
+import { NextResponse } from "next/server";
 
-export default function manifest(): MetadataRoute.Manifest {
-  return {
+export async function GET() {
+  const manifest = {
     id: "/admin",
     name: "إدارة منصة مأرب إيفنتس",
     short_name: "إدارة مأرب",
-    description: "لوحة التحكم العليا لإدارة منصة فعاليات مأرب ومراقبة المنشآت والحجوزات",
+    description:
+      "لوحة التحكم العليا لإدارة منصة فعاليات مأرب ومراقبة المنشآت والحجوزات",
     start_url: "/admin",
     scope: "/admin",
     display: "standalone",
@@ -36,4 +37,11 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
   };
+
+  return NextResponse.json(manifest, {
+    headers: {
+      "Content-Type": "application/manifest+json; charset=utf-8",
+      "Cache-Control": "public, max-age=0, must-revalidate",
+    },
+  });
 }
