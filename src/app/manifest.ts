@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
     name: "فعاليات مأرب | حجز القاعات والاستراحات",
     short_name: "فعاليات مأرب",
     description: "المنصة الأولى في مأرب لحجز قاعات الأفراح والمناسبات والشاليهات والاستراحات بكل سهولة وموثوقية",

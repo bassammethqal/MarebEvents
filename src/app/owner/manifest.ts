@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/owner",
     name: "إدارة منشآت مأرب إيفنتس",
     short_name: "إدارة المنشآت",
     description: "تطبيق وبوابة أصحاب القاعات والشاليهات في مأرب لمتابعة الحجوزات والتقويم وتحديث الأسعار",

@@ -9,6 +9,11 @@ export const SESSION_COOKIE_NAME = "mareb_session";
  */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname.endsWith("manifest.webmanifest") || pathname.endsWith("manifest.json")) {
+    return NextResponse.next();
+  }
+
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
 
   const requestHeaders = new Headers(request.headers);
@@ -92,6 +97,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*manifest\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

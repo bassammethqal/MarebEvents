@@ -7,7 +7,13 @@ import { InstallAppPrompt } from "@/components/pwa/InstallAppPrompt";
 export const instant = false;
 
 export const metadata: Metadata = {
-  manifest: "/manifest.webmanifest",
+  title: "إدارة المنصة | مأرب إيفنتس",
+  manifest: "/admin/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "إدارة مأرب",
+  },
 };
 
 export default async function AdminLayout({
